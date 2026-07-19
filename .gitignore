@@ -2,3 +2,9 @@ venv/
 __pycache__/
 site/
 .env
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
