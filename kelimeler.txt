@@ -1,1 +1,6 @@
-CS2 maksimum FPS ve başlatma seçenekleri
+Counter-Strike 2 düşük sistem gereksinimleri için grafik ayarları
+Linux Mint 22.3 Zena Xfce masaüstü özelleştirme rehberi
+Intensive care ünitesinde kullanılan monitörlerin teknik verileri
+NVIDIA GTX 960 ile modern oyunlarda performans analizi
+M-Game Solo ses kartı için VST plugin kurulumu
+
