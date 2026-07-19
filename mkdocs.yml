@@ -1,0 +1,30 @@
+site_name: Teknik Donanım ve Oyun Optimizasyonu
+site_url: https://sizin-domain.com
+site_description: Donanım bileşenleri, Linux sistemleri ve rekabetçi oyunlar için maksimum performans optimizasyon rehberleri.
+site_author: Kadir Akdeniz
+
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - search.suggest
+    - search.highlight
+    - toc.integrate
+  language: tr
+
+plugins:
+  - search
+  - minify:
+      minify_html: true
+      minify_js: true
+      minify_css: true
+
+markdown_extensions:
+  - meta
+  - toc:
+      permalink: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
