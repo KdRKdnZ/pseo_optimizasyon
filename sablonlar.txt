@@ -1,0 +1,3 @@
+{gpu} undervolt ayarları
+{gpu} maksimum oyun performansı
+{gpu} Linux sürücü kurulumu

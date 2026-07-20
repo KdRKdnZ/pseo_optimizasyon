@@ -1,63 +1,67 @@
 import os
 import asyncio
-import logging
-from slugify import slugify
 from google import genai
-from google.genai import types
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 client = genai.Client()
 
-PROMPT_TEMPLATE = """
-Sen kıdemli bir yazılım mimarı, donanım uzmanı ve SEO yazarısın.
-Aşağıdaki anahtar kelime için teknik doğruluğu yüksek, kanıta dayalı ve SEO uyumlu Türkçe bir Markdown makale oluştur.
-Gereksiz giriş cümleleri kullanma, doğrudan konuya gir ve H1, H2, H3 başlık hiyerarşisine kesinlikle uy.
+def dosya_oku(dosya_adi):
+    if not os.path.exists(dosya_adi):
+        return []
+    with open(dosya_adi, 'r', encoding='utf-8') as f:
+        return [satir.strip() for satir in f if satir.strip()]
 
-Anahtar Kelime: {keyword}
-"""
+def uretilenlere_ekle(kelime):
+    with open('uretilenler.txt', 'a', encoding='utf-8') as f:
+        f.write(kelime + '\n')
 
-async def generate_article(keyword, semaphore):
+async def makale_uret(kelime, semaphore):
     async with semaphore:
-        logging.info(f"İşleniyor: {keyword}")
-        
-        # Hata durumunda 5 kez artan sürelerle (10s, 20s, 30s...) tekrar dener
-        for attempt in range(5):
-            try:
-                response = await client.aio.models.generate_content(
-                    model='gemini-3.5-flash',
-                    contents=PROMPT_TEMPLATE.format(keyword=keyword),
-                    config=types.GenerateContentConfig(temperature=0.3)
-                )
-                await asyncio.sleep(4) # Standart rate-limit koruması
-                return keyword, response.text
-            except Exception as e:
-                wait_time = (attempt + 1) * 10
-                logging.warning(f"API Yoğunluğu. {wait_time} saniye bekleniyor... (Deneme {attempt+1}/5)")
-                await asyncio.sleep(wait_time)
-        
-        logging.error(f"Başarısız ({keyword}): Sunucu yanıt vermiyor.")
-        return keyword, None
+        try:
+            print(f"Üretiliyor: {kelime}")
+            response = await client.aio.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=f"'{kelime}' hakkında teknik, SEO uyumlu ve doğrudan bilgi veren detaylı bir makale yaz. Markdown formatında olsun ve içerik direkt h1 başlığı ile başlasın. Gereksiz giriş cümleleri kullanma."
+            )
+            
+            dosya_adi = kelime.replace(" ", "_").lower() + ".md"
+            dosya_yolu = os.path.join("docs", dosya_adi)
+            
+            with open(dosya_yolu, "w", encoding="utf-8") as f:
+                f.write(response.text)
+            
+            uretilenlere_ekle(kelime)
+            print(f"Başarılı: {kelime}")
+            
+        except Exception as e:
+            print(f"Hata ({kelime}): {e}")
 
 async def main():
-    if not os.path.exists('kelimeler.txt'):
+    os.makedirs("docs", exist_ok=True)
+    
+    sablonlar = dosya_oku("sablonlar.txt")
+    ekran_kartlari = dosya_oku("ekran_kartlari.txt")
+    manuel_kelimeler = dosya_oku("kelimeler.txt")
+    uretilenler = set(dosya_oku("uretilenler.txt"))
+    
+    tum_kelimeler = []
+    
+    for gpu in ekran_kartlari:
+        for sablon in sablonlar:
+            tum_kelimeler.append(sablon.replace("{gpu}", gpu))
+            
+    tum_kelimeler.extend(manuel_kelimeler)
+    
+    islem_yapilacaklar = [k for k in tum_kelimeler if k not in uretilenler]
+    
+    if not islem_yapilacaklar:
+        print("Sistem kontrol edildi: Üretilecek yeni anahtar kelime bulunamadı.")
         return
 
-    with open('kelimeler.txt', 'r', encoding='utf-8') as f:
-        keywords = [line.strip() for line in f if line.strip()]
-
-    os.makedirs('docs', exist_ok=True)
-    semaphore = asyncio.Semaphore(3)
-    tasks = [generate_article(kw, semaphore) for kw in keywords]
+    print(f"Toplam {len(islem_yapilacaklar)} YENİ makale üretilecek (Eskiler atlandı)...")
     
-    for future in asyncio.as_completed(tasks):
-        kw, content = await future
-        if content:
-            slug = slugify(kw)
-            file_path = f"docs/{slug}.md"
-            with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(f"---\ntitle: {kw}\ndescription: {kw} hakkında detaylı optimizasyon ve donanım rehberi.\n---\n\n")
-                f.write(content)
-            logging.info(f"Kaydedildi: {file_path}")
+    semaphore = asyncio.Semaphore(5)
+    gorevler = [makale_uret(k, semaphore) for k in islem_yapilacaklar]
+    await asyncio.gather(*gorevler)
 
 if __name__ == "__main__":
     asyncio.run(main())
