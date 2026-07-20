@@ -5,13 +5,33 @@ site_author: Kadir Akdeniz
 
 theme:
   name: material
+  language: tr
   features:
     - navigation.instant
     - navigation.tracking
+    - navigation.tabs
+    - navigation.top
     - search.suggest
     - search.highlight
     - toc.integrate
-  language: tr
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Koyu temaya geç
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Açık temaya geç
+  font:
+    text: Roboto
+    code: Roboto Mono
 
 plugins:
   - search
