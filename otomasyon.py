@@ -19,7 +19,7 @@ async def makale_uret(kelime, semaphore):
         try:
             print(f"Üretiliyor: {kelime}")
             response = await client.aio.models.generate_content(
-                model='gemini-2.5-flash',
+                model='gemini-3.5-flash',
                 contents=f"'{kelime}' hakkında teknik, SEO uyumlu ve doğrudan bilgi veren detaylı bir makale yaz. Markdown formatında olsun ve içerik direkt h1 başlığı ile başlasın. Gereksiz giriş cümleleri kullanma."
             )
             
