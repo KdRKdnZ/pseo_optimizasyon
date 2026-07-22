@@ -5,6 +5,7 @@ site_author: Kadir Akdeniz
 
 theme:
   name: material
+  custom_dir: overrides
   language: tr
   features:
     - navigation.instant
