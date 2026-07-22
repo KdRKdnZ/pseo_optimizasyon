@@ -5,6 +5,8 @@ site_url: https://pseo-optimizasyon.pages.dev
 theme:
   name: material
   custom_dir: overrides
+  logo: assets/logo.svg
+  favicon: assets/favicon.svg
   language: tr
   features:
     - navigation.instant
