@@ -1,98 +1,127 @@
 ---
-title: cs2 fps sabitleme
-description: cs2 fps sabitleme hakkında detaylı optimizasyon ve donanım rehberi.
+title: "cs2 fps sabitleme"
+description: "cs2 fps sabitleme hakkında detaylı teknik rehber, performans analizi ve karşılaştırma."
 ---
 
-# CS2 FPS Sabitleme Rehberi: En Düşük Gecikme ve Maksimum Akıcılık
+# CS2 FPS Sabitleme Rehberi: Konsol Komutları, GPU Ayarları ve En İyi Performans
 
-Counter-Strike 2 (CS2), Source 2 motorunun getirdiği yeni fiziksel tabanlı renderlama ve "sub-tick" sunucu altyapısı nedeniyle donanım kaynaklarını CS:GO’ya kıyasla çok daha yoğun kullanır. CS2'de sınırsız FPS (kare hızı) almak her zaman en akıcı oyun deneyimi anlamına gelmez. Doğru yapılandırılmış bir **CS2 FPS sabitleme** işlemi; kare zamanlamasını (frame pacing) iyileştirir, giriş gecikmesini (input lag) azaltır ve sistem bileşenlerinin gereksiz ısınmasını önler.
+Counter-Strike 2 (CS2) oyununda kare hızını (FPS) sabitlemek, sistem bileşenlerinin aşırı ısınmasını önlemek, ekran yırtılmalarını (screen tearing) engellemek ve işlemci/ekran kartı yükünü dengeleyerek daha kararlı bir kare süresi (frame time) elde etmek için kritik bir teknik düzenlemedir. CS2, Source 2 motoruna geçiş yaptığı için eski CS:GO komutlarının bir kısmı değişmiş veya çalışma mantığı farklılaşmıştır.
 
----
-
-## CS2'de FPS Sabitlemek Neden Önemlidir?
-
-Birçok oyuncu yüksek FPS değerlerinin her zaman daha iyi olduğunu düşünür. Ancak donanım mimarisi ve oyun motoru optimizasyonu açısından durum daha karmaşıktır.
-
-### Frame Pacing (Kare Zamanlaması) ve Akıcılık
-Ekranda saniyede 300 kare görmek, bu karelerin eşit zaman aralıklarıyla çizildiği anlamına gelmez. Örneğin; bir saniye içindeki ilk 100 kare 200ms'de, geri kalan 200 kare ise 800ms'de çizilirse, yüksek FPS almanıza rağmen oyunda anlık takılmalar (micro-stuttering) hissedersiniz. FPS'i donanımınızın stabil olarak verebildiği bir değere sabitlemek, kare zamanlamasını eşitler ve akıcılığı maksimuma çıkarır.
-
-### Gecikme (Input Lag) ve Isı Yönetimi
-Ekran kartınız (GPU) %99 yük altında çalıştığında, render kuyruğu (render queue) şişer ve bu durum giriş gecikmesini (input lag) ciddi oranda artırır. FPS'i GPU kullanımını %90-95 civarında tutacak bir değere sabitlemek, gecikmeyi minimize eder. Ayrıca işlemci (CPU) ve GPU üzerindeki termal yükü azaltarak ani frekans düşüşlerinin (thermal throttling) önüne geçer.
+Bu rehberde, CS2'de FPS sabitleme işlemlerini konsol komutları, başlatma seçenekleri, ekran kartı yazılımları ve konfigürasyon dosyaları üzerinden teknik detaylarıyla inceliyoruz.
 
 ---
 
-## CS2 FPS Sabitleme Yöntemleri
+## CS2'de FPS Neden Sabitlenmelidir?
 
-CS2'de kare hızını sabitlemek için kullanabileceğiniz, teknik olarak en kararlı dört farklı yöntem bulunmaktadır.
+Uncapped (sınırsız) FPS kullanımı teorik olarak sistemin üretebildiği en düşük girdi gecikmesini (input lag) sunar. Ancak pratik kullanımda sınırsız FPS şu sorunlara yol açar:
 
-### 1. Oyun İçi Konsol Komutu (`fps_max`)
-Source 2 motorunun kendi iç mekanizmasını kullanmak, ek bir yazılım katmanı gerektirmediği için en kararlı yöntemdir.
+1. **Gereksiz Yük ve Isınma:** GPU ve CPU sürekli %100 kapasitede çalışarak daha fazla güç tüketir ve ısınır. Bu durum zamanla "Thermal Throttling" (sıcaklığa bağlı frekans düşürme) kaynaklı ani FPS düşüşlerine (FPS drop) neden olur.
+2. **Düzensiz Kare Süresi (Frame Time Spikes):** Dalgalanan FPS değerleri, milisaniye cinsinden karelerin ekrana gelme süresini belirsizleştirir. Sabit 200 FPS, 150 ile 300 arası sürekli dalgalanan bir FPS'ten daha akıcı bir hissiyat sağlar.
+3. **VRR (G-Sync / FreeSync) Çakışması:** Değişken yenileme hızına sahip monitörlerde, FPS monitörün Hz değerini aştığında VRR devre dışı kalır ve ekran yırtılmaları başlar.
 
-1. CS2'yi başlatın ve **Ayarlar > Oyun > Geliştirici Konsolunu Etkinleştir** seçeneğini **Evet** yapın.
-2. `"` veya `~` tuşuna basarak konsolu açın.
-3. Konsola aşağıdaki komutu yazın ve Enter tuşuna basın:
+---
+
+## 1. Konsol Komutları ile CS2 FPS Sabitleme
+
+Oyun içi konsol, FPS değerini anlık ve en düşük sistemsel yük ile sınırlamanın en etkili yoludur.
+
+### Adım 1: Geliştirici Konsolunu Etkinleştirme
+1. CS2'yi açın ve **Ayarlar (Dişli Çark)** simgesine tıklayın.
+2. **Oyun (Game)** sekmesine gelin.
+3. **Geliştirici Konsolunu Etkinleştir (Enable Developer Console)** seçeneğini **"Evet"** yapın.
+4. `~` veya `"` (é) tuşuna basarak konsolu açın.
+
+### Adım 2: FPS Sabitleme Komutları
+Konsola aşağıdaki komutları ihtiyacınıza göre girin:
+
+* **Oyun İçi FPS Sabitleme:**
+  ```text
+  fps_max [değer]
+  ```
+  *Örnek:* 144 Hz monitör için FPS'i 240'a sabitlemek istiyorsanız: `fps_max 240`
+
+* **Ana Menü FPS Sabitleme:**
+  Ana menüde ekran kartının tam yükte çalışmasını engellemek için menü FPS'ini ayrı sınırlayabilirsiniz:
+  ```text
+  fps_max_ui [değer]
+  ```
+  *Örnek:* `fps_max_ui 60`
+
+* **FPS Sınırını Kaldırma:**
+  ```text
+  fps_max 0
+  ```
+  *(Not: `fps_max 0` kullanımı bazı sistemlerde yükleme ekranı sürelerini uzatabilir; bunun yerine `fps_max 999` kullanımı önerilir.)*
+
+---
+
+## 2. Steam Başlatma Seçenekleri (Launch Options) ile FPS Sabitleme
+
+Konsol komutunun her oyuna girişte sıfırlanmasını önlemek için Steam başlatma seçeneklerini kullanabilirsiniz.
+
+1. **Steam** kütüphanenizde **Counter-Strike 2**'ye sağ tıklayın ve **Özellikler**'i seçin.
+2. **Genel** sekmesi altındaki **Başlatma Seçenekleri** metin kutusuna gidin.
+3. Komutu aşağıdaki formatta ekleyin:
    ```text
-   fps_max 240
+   +fps_max 240 +fps_max_ui 60
    ```
-   *(Not: "240" yerine monitörünüzün yenileme hızına (Hz) ve sistem performansınıza uygun bir değer yazmalısınız.)*
-4. Eğer ana menüdeki FPS'i de sınırlamak istiyorsanız şu komutu kullanabilirsiniz:
-   ```text
-   fps_max_ui 120
-   ```
-
-### 2. Başlatma Seçenekleri (Launch Options)
-Konsol komutunun her oyuna girişte sıfırlanmasını önlemek için bu değeri Steam başlatma seçeneklerine kalıcı olarak ekleyebilirsiniz.
-
-1. Steam kütüphanenizde **CS2**'ye sağ tıklayın ve **Özellikler**'i seçin.
-2. **Genel** sekmesinde bulunan **Başlatma Seçenekleri** kutusuna gelin.
-3. Buraya aşağıdaki kodu ekleyin:
-   ```text
-   +fps_max 240
-   ```
-
-### 3. NVIDIA Kontrol Paneli ile FPS Sınırlama
-NVIDIA sürücü seviyesinde yapılan sınırlama, oyun motorunun sınırlayıcısına göre bazen daha kararlı kare zamanlaması sunabilir.
-
-1. Masaüstüne sağ tıklayıp **NVIDIA Denetim Masası**'nı açın.
-2. **3D Ayarlarının Yönetilmesi** sekmesine gidin.
-3. **Program Ayarları** kısmından *Counter-Strike 2 (cs2.exe)* uygulamasını seçin (Listede yoksa "Ekle" diyerek oyunun kurulu olduğu dizinden seçin).
-4. **Maksimum Kare Hızı (Max Frame Rate)** ayarını bulun, **Açık** konuma getirin ve hedef FPS değerinizi girip uygulayın.
-
-### 4. AMD Radeon Software ile FPS Sınırlama
-AMD ekran kartı kullanıcıları, sürücü düzeyinde gecikmeyi artıran geleneksel sınırlayıcılar yerine **Radeon Chill** teknolojisini kullanmalıdır.
-
-1. **AMD Software: Adrenalin Edition** uygulamasını açın.
-2. **Oyun** sekmesinden **CS2**'yi seçin.
-3. **Radeon Chill** özelliğini aktif hale getirin.
-4. **Min FPS** ve **Max FPS** değerlerini aynı sayıya (örneğin 240) ayarlayarak FPS'i sabitleyin.
+4. Pencereyi kapatıp oyunu başlatın.
 
 ---
 
-## G-Sync ve FreeSync Kullanıcıları İçin İdeal FPS Sabitleme Değerleri
+## 3. Ekran Kartı Sürücüleri Üzerinden FPS Sabitleme
 
-Değişken Yenileme Hızı (VRR) teknolojilerini (G-Sync veya FreeSync) kullanan oyuncuların, ekran yırtılmasını önlemek ve en düşük gecikmeyi elde etmek için özel bir sabitleme formülü uygulaması gerekir.
+Sürücü seviyesinde yapılan limitleme, Source 2 motorunun kare işleme kuyruğuna doğrudan müdahale ettiği için son derece kararlı kare süreleri sunar.
 
-VRR teknolojisinin aktif kalabilmesi için FPS değerinin, monitörün maksimum Hz değerinin altında kalması şarttır. FPS, Hz değerini aştığı anda G-Sync/FreeSync devre dışı kalır ve sistem geleneksel V-Sync gecikmesine maruz kalır veya ekran yırtılmaları başlar.
+### Nvidia Kullanıcıları İçin (Nvidia Control Panel)
+1. Masaüstüne sağ tıklayıp **Nvidia Denetim Masası**'nı açın.
+2. Sol menüden **3D Ayarlarının Yönetilmesi** sekmesine girin.
+3. **Program Ayarları** başlığı altında `cs2.exe` dosyasını seçin (Listede yoksa "Ekle" butonundan oyunun dizinini bulun).
+4. **Maksimum Kare Hızı (Max Frame Rate)** ayarını **Açık** konuma getirin ve istediğiniz FPS değerini (örn: 240) girin.
+5. **Uygula** butonuna tıklayın.
 
-**Altın Kural Formülü:** `Monitör Hz Değeri - 3 FPS`
-
-| Monitör Yenileme Hızı (Hz) | Önerilen CS2 FPS Sabitleme Değeri |
-| :--- | :--- |
-| **144 Hz** | `fps_max 141` |
-| **240 Hz** | `fps_max 237` |
-| **360 Hz** | `fps_max 357` |
-
-*Ekstra İpucu:* VRR kullanıyorsanız, oyun içi ayarlardan **NVIDIA Reflex Low Latency** ayarını **On + Boost** konumuna getirin. Bu ayar, FPS'i otomatik olarak monitör sınırınızın hemen altında tutarak gecikmeyi optimize eder.
+### AMD Kullanıcıları İçin (AMD Software: Adrenalin Edition)
+1. **AMD Software** uygulamasını açın.
+2. **Oyun** sekmesinden **Counter-Strike 2**'yi seçin.
+3. **Radeon Chill** özelliğini aktif edin.
+4. **Min FPS** ve **Max FPS** değerlerini aynı sayıya ayarlayın (örn: Min: 200 / Max: 200).
+5. Alternatif olarak **Frame Rate Target Control (FRTC)** özelliğini kullanarak küresel bir limit belirleyebilirsiniz.
 
 ---
 
-## CS2 FPS Sabitleme Hakkında Sıkça Sorulan Sorular
+## 4. Kalıcı Yapılandırma: Autoexec.cfg Kullanımı
 
-### `fps_max 0` yapmak performansı artırır mı?
-Hayır. `fps_max 0` komutu FPS sınırını tamamen kaldırır. Bu durum anlık olarak çok yüksek FPS değerleri görmenizi sağlasa da, GPU kullanımını sürekli %100'de tutarak termal darboğaza (thermal throttling) ve yüksek giriş gecikmesine neden olur. CS2 için önerilen, sisteminizin stabil olarak verebildiği en yüksek ortalama FPS değerine sabitleme yapmaktır.
+Konsol komutlarının kalıcı olmasını sağlayan en profesyonel yöntem bir `autoexec.cfg` dosyası oluşturmaktır.
 
-### FPS sabitlemek input lag (gecikme) yaratır mı?
-Doğru yöntemle yapıldığında hayır, aksine azaltır. Oyun içi `fps_max` komutu veya NVIDIA Reflex kullanımı, GPU'nun aşırı yüklenmesini önleyerek donanım tabanlı giriş gecikmesini düşürür. Ancak üçüncü parti yazılımlarla (RTSS vb.) yapılan sabitlemeler mikro düzeyde gecikme ekleyebilir. Bu nedenle CS2 içinde öncelikli olarak oyun içi konsol veya sürücü ayarları tercih edilmelidir.
+1. `C:\Program Files (x86)\Steam\steamapps\common\Counter-Strike Global Offensive\game\csgo\cfg` dizinine gidin.
+2. Metin belgesi oluşturun ve adını `autoexec.cfg` yapın (Uzantısının `.txt` değil `.cfg` olduğundan emin olun).
+3. Dosyayı Notepad++ veya varsayılan Not Defteri ile açıp içine şu satırları ekleyin:
+   ```cfg
+   fps_max "240"
+   fps_max_ui "60"
+   host_writeconfig
+   ```
+4. Kaydedip kapatın.
 
-### CS2'de FPS'i kaç Hz'e sabitlemeliyim?
-Eğer VRR (G-Sync/FreeSync) kullanmıyorsanız, FPS değerinizi monitörünüzün Hz değerinin **2 katı + 1** olacak şekilde sabitlemek (Örn: 144Hz için 289 FPS) kare geçişlerindeki akıcılığı artırır. Eğer sisteminiz bu değerleri stabil veremiyorsa, doğrudan monitör Hz değerinizin sabit bir katına (Örn: 240Hz için 240 FPS) sabitlemelisiniz.
+---
+
+## İdeal FPS Değeri Nasıl Hesaplanmalıdır?
+
+FPS sabitleme değerini seçerken monitörünüzün yenileme hızı (Hz) ve sisteminizin sunduğu ortalama performans belirleyicidir.
+
+| Monitör Hızı (Hz) | VRR (G-Sync/FreeSync) Açık | VRR Kapalı / Rekabetçi Mod |
+| :--- | :--- | :--- |
+| **60 Hz** | 57 FPS | 120 FPS / 180 FPS |
+| **144 Hz** | 138 FPS | 288 FPS veya `fps_max 0` |
+| **240 Hz** | 225 FPS | 300 FPS / 400 FPS |
+| **360 Hz** | 340 FPS | Sistem Gücüne Göre Sınırsız / 400+ |
+
+* **VRR (G-Sync/FreeSync) Kullanıyorsanız:** Input lag'i en aza indirmek ve G-Sync modunun dışına çıkmamak için FPS değerini monitör Hz değerinin **3-4 FPS altına** sabitleyin (Örn: 144Hz için 140 FPS).
+* **Nvidia Reflex Kullanıyorsanız:** CS2 grafik ayarlarındaki **Nvidia Reflex Low Latency** seçeneğini "On + Boost" konumuna getirdiğinizde, sistem GPU sınırına ulaştığında FPS'i otomatik olarak ideal noktada sınırlar. Bu durumda manuel `fps_max` sınırı koymak yerine Reflex'in yönetimine izin vermek gecikme süresini minimumda tutar.
+
+---
+
+## Özet ve Teknik Tavsiyeler
+
+* **Minimum Input Lag İçin:** Eğer sisteminiz sürekli olarak yüksek FPS üretebiliyorsa (örn: 300-400 FPS) ve sıcaklık değerleriniz normalse, `fps_max` değerini sisteminizin en düşük gördüğü düşüş (drop) noktasının biraz üzerine sabitlemek en istikrarlı gecikme süresini sunar.
+* **Sıcaklık ve Akıcılık Dengesi İçin:** Monitör yenileme hızınızın 2 katı kadar bir değere sabitlemek (144Hz için ~300 FPS) hem akıcılığı korur hem de GPU'nun gereksiz yere ısınmasını engeller.

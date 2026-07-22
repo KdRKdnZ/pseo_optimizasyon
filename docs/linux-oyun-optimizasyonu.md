@@ -1,146 +1,156 @@
 ---
-title: linux oyun optimizasyonu
-description: linux oyun optimizasyonu hakkında detaylı optimizasyon ve donanım rehberi.
+title: "linux oyun optimizasyonu"
+description: "linux oyun optimizasyonu hakkında detaylı teknik rehber, performans analizi ve karşılaştırma."
 ---
 
-# Linux Oyun Optimizasyonu: Maksimum FPS ve Düşük Gecikme İçin Kapsamlı Rehber
+# Linux Oyun Optimizasyonu: Maksimum Performans ve FPS Artırma Rehberi
 
-Linux, açık kaynaklı yapısı sayesinde oyun performansını donanım seviyesinde optimize etmek için eşsiz bir esneklik sunar. Doğru yapılandırılmış bir Linux dağıtımı, Windows'a kıyasla daha düşük sistem gecikmesi (latency), daha verimli RAM yönetimi ve daha kararlı kare hızları (FPS) sağlayabilir. Bu rehber, çekirdek (kernel) seviyesinden grafik API'lerine kadar uygulayabileceğiniz en etkili **linux oyun optimizasyonu** adımlarını teknik detaylarıyla ele almaktadır.
-
----
-
-## Çekirdek (Kernel) ve Zamanlayıcı (Scheduler) Optimizasyonları
-
-Linux çekirdeği, sistem kaynaklarının nasıl dağıtılacağını belirler. Varsayılan çekirdekler genellikle genel kullanım (sunucu/ofis) için optimize edilmiştir. Oyunlar gibi gerçek zamanlı (real-time) performans gerektiren senaryolar için özel çekirdekler tercih edilmelidir.
-
-### Zen Kernel ve XanMod Kullanımı
-
-Oyunlarda milisaniyelik gecikmeleri önlemek için "preemption" (öncelikleme) modeli agresif olan çekirdekler kullanılmalıdır.
-
-*   **Zen Kernel:** Arch Linux tabanlı sistemlerde varsayılan olarak sunulan, masaüstü ve oyun performansına odaklanan bir çekirdektir. Düşük gecikmeli zamanlama (low-latency scheduling) algoritmaları içerir.
-*   **XanMod:** Debian/Ubuntu tabanlı sistemler için mükemmel bir alternatiftir. FQ-CoDel paket zamanlayıcısı ve optimize edilmiş ham güç yönetimi ile oyunlarda daha kararlı %1 ve %0.1 minimum FPS değerleri sunar.
-
-**Kurulum (Ubuntu/Debian için XanMod):**
-
-```bash
-wget -qO - https://dl.xanmod.org/archive.key | sudo gpg --dearmor -o /usr/share/keyrings/xanmod-archive-keyring.gpg
-echo 'deb [signed-by=/usr/share/keyrings/xanmod-archive-keyring.gpg] http://deb.xanmod.org releases main' | sudo tee /etc/apt/sources.list.d/xanmod-kernel.list
-sudo apt update && sudo apt install linux-xanmod-x64v3
-```
-
-### CPU Governor ve Enerji Yönetimi
-
-İşlemcinizin (CPU) oyun esnasında güç tasarrufu moduna geçmesi anlık takılmalara (stuttering) neden olur. CPU ölçekleyiciyi "Performance" moduna almak, çekirdeklerin sürekli en yüksek frekansta çalışmasını sağlar.
-
-**Geçici olarak etkinleştirme:**
-```bash
-echo "performance" | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
-```
-
-**Kalıcı hale getirmek için (cpupower aracı ile):**
-```bash
-sudo systemctl enable --now cpupower.service
-```
+Linux işletim sistemlerinde oyun performansı, doğru sürücü yapılandırmaları, kernel (çekirdek) özelleştirmeleri ve katman yazılımlarının optimizasyonu ile Windows seviyesine hatta bazı durumlarda üzerine çıkarılabilir. Bu rehber; Vulkan, Proton, CPU/GPU optimizasyonları ve sistem parametrelerini kapsayan teknik bir kılavuzdur.
 
 ---
 
-## Grafik Sürücüleri ve API Yapılandırması
+## 1. Ekran Kartı Sürücülerinin Yapılandırılması
 
-Donanımınızdan tam performans almak, doğru grafik sürücülerinin seçilmesine ve Vulkan API'sinin doğru yapılandırılmasına bağlıdır.
+Oyun performansındaki en kritik faktör ekran kartı sürücüleridir. Açık kaynak ve kapalı kaynak sürücülerin doğru ayarlanması gerekir.
 
-### NVIDIA ve AMD Sürücü Seçimi
+### Nvidia GPU Optimizasyonu
+Nvidia kullanıcıları mutlaka güncel **Sahipli (Proprietary)** sürücüleri kullanmalıdır.
 
-*   **AMD (Radeon):** AMD kullanıcıları kesinlikle kapalı kaynak kodlu sürücüler yerine açık kaynaklı **Mesa** sürücülerini kullanmalıdır. Mesa içindeki **RADV** Vulkan sürücüsü, AMD'nin resmi sürücüsünden çok daha yüksek oyun performansı sunar.
-*   **NVIDIA:** NVIDIA kullanıcıları ise açık kaynaklı "Nouveau" sürücüsü yerine en güncel **proprietary (sahipli)** resmi sürücüleri kullanmalıdır.
+* **Sürücü Kurulumu:** Dağıtımınızın paket yöneticisini kullanarak en son kararlı sürücüyü (örn. `nvidia-driver-550` veya üstü) yükleyin.
+* **PowerMizer Ayarı:** Ekran kartının sürekli yüksek frekansta çalışmasını sağlamak için Terminal üzerinden veya `nvidia-settings` GUI paneli ile PowerMizer modunu "Prefer Maximum Performance" olarak ayarlayın.
+  ```bash
+  nvidia-settings -a "[gpu:0]/PowerMizerEnable=01" -a "[gpu:0]/NV20ControlXvDisableBackendScaling=1" -a "[gpu:0]/GPUPowerMizerMode=1"
+  ```
+* **DRM KMS Etkinleştirme:** Ekran yırtılmalarını önlemek ve Wayland uyumluluğunu artırmak için Kernel parametrelerine `nvidia-drm.modeset=1` ekleyin.
 
-**Mesa Sürücülerini Güncelleme (Ubuntu için Kisak PPA):**
-```bash
-sudo add-apt-repository ppa:kisak/kisak-mesa
-sudo apt update && sudo apt upgrade -y
-```
+### AMD GPU Optimizasyonu
+AMD kartlar için çekirdeğe entegre **MESA (RADV)** sürücüleri en iyi performansı verir.
 
-### Vulkan ve DXVK Entegrasyonu
-
-Windows oyunları DirectX (9/10/11/12) API'lerini kullanır. Linux üzerinde bu oyunları çalıştırmak için DirectX çağrılarını Vulkan çağrılarına dönüştüren **DXVK** (DirectX 9/10/11) ve **VKD3D-Proton** (DirectX 12) katmanları kullanılır.
-
-*   **Shader Pre-compilation (Gölgelendirici Ön Derlemesi):** Oyun içi takılmaların en büyük sebebi gölgelendiricilerin anlık derlenmesidir. Steam ayarlarından "Shader Pre-Caching" özelliğini mutlaka aktif hale getirin.
-*   **Graphics Pipeline Library (GPL):** Mesa 23.0 ve NVIDIA 525.80 sürümleriyle gelen Vulkan GPL desteği, shader derleme takılmalarını neredeyse tamamen ortadan kaldırır. Bu özelliğin aktif olduğundan emin olun.
+* **MESA Sürücülerini Güncel Tutun:** PPA veya Arch (AUR) depolarından en güncel MESA paketlerini kullanın.
+* **RADV Kullanımı:** AMDVLK yerine varsayılan Vulkan sürücüsü olarak MESA'nın RADV sürücüsünü zorlamak için şu ortam değişkenini kullanın:
+  ```bash
+  export AMD_VULKAN_ICD=RADV
+  ```
 
 ---
 
-## Oyun Çalışma Zamanı (Runtime) ve Katman Optimizasyonları
+## 2. Kernel (Çekirdek) ve CPU Optimizasyonu
 
-Oyunların Linux üzerinde yerel performansa yakın çalışmasını sağlayan uyumluluk katmanlarının optimize edilmesi kritik önem taşır.
+Standart Linux çekirdekleri genel kullanım için tasarlanmıştır. Oyunlarda düşük gecikme (latency) ve yüksek FPS için optimize edilmiş çekirdekler tercih edilmelidir.
 
-### Proton ve Wine Yapılandırması
+### Özel Kernel Kullanımı
+Oyun odaklı özelleştirilmiş çekirdekler, **fsync (futex2)** ve düşük gecikmeli zamanlayıcılar (scheduler) içerir:
+* **XanMod Kernel:** Yüksek yük altında düşük gecikme sağlar.
+* **Liquorix Kernel:** Masaüstü ve oyun tepkiselliğine odaklanır.
+* **CachyOS / Zen Kernel:** AMD ve Intel işlemciler için ek derleme optimizasyonları sunar.
 
-Steam üzerinde oyun oynarken Valve'ın geliştirdiği **Proton** kullanılır. Ancak topluluk tarafından geliştirilen **Proton GE (GloriousEggroll)**, resmi Proton sürümlerine kıyasla birçok performans yaması, güncel DXVK kodları ve video kod çözücü iyileştirmeleri barındırır.
+### CPU Governor (Güç Modu) Ayarı
+İşlemci frekansının oyun esnasında düşmesini engellemek için `performance` moduna geçilmelidir.
 
-**Proton GE Kurulumu (ProtonUp-Qt aracı ile kolayca yapılabilir):**
-1. `ProtonUp-Qt` uygulamasını Flatpak veya paket yöneticinizden indirin.
-2. En güncel "GE-Proton" sürümünü seçip yükleyin.
-3. Steam oyun özelliklerinden uyumluluk aracını yüklediğiniz GE-Proton sürümü olarak değiştirin.
+```bash
+# cpupower aracını kullanarak tüm çekirdekleri performans moduna alın
+sudo cpupower frequency-set -g performance
+```
 
-### Feral GameMode ile Sistem Kaynaklarını Yönetme
+*Alternatif olarak `auto-cpufreq` veya `gamemode` servisleri bu işlemi otomatikleştirir.*
 
-Feral Interactive tarafından geliştirilen **GameMode**, oyun başladığında arka planda çalışan servisleri optimize eden bir daemon'dır.
+---
 
-**GameMode'un gerçekleştirdiği optimizasyonlar:**
-*   CPU governor'ı otomatik olarak "performance" moduna alır.
-*   I/O (Giriş/Çıkış) önceliğini oyuna verir.
-*   Ekran koruyucuyu ve güç tasarrufu modlarını devre dışı bırakır.
-*   NVIDIA GPU'lar için otomatik hız aşırtma (overclock) profillerini uygular.
+## 3. Wine, Proton ve DXVK/VKD3D Yapılandırması
 
-**Kullanımı:**
-Steam başlatma seçeneklerine (Launch Options) şu komutu ekleyin:
+Windows oyunlarının Linux'ta çalışmasını sağlayan çeviri katmanlarının güncelliği ve konfigürasyonu hayati önem taşır.
+
+### Custom Proton: Proton-GE (GloriousEggroll)
+Valve'ın standart Proton sürümüne kıyasla daha fazla yaması, güncel DXVK bileşeni ve medya kod çözücü desteği barındırır.
+* **Kurulum:** `ProtonUp-Qt` GUI aracını kullanarak en güncel **Proton-GE** sürümünü indirin ve Steam'e entegre edin.
+
+### DXVK ve Vulkan Shader Önbelleği
+DirectX 9/10/11 çağrılarını Vulkan'a çeviren DXVK ve DirectX 12'yi çeviren VKD3D, takılmaları (stutter) önlemek için shader'ları önceden işlemelidir.
+
+* **Steam Shader Pre-compilation:** Steam ayarlarından *"Enable Shader Pre-caching"* seçeneğini aktif tutun.
+* **Görsel Takılmaları Engelleme (Gelişmiş):** DXVK Async özelliğini destekleyen bir yapılandırmada takılmaları minimuma indirmek için başlangıç seçeneğine ekleyin:
+  ```bash
+  DXVK_ASYNC=1 %command%
+  ```
+
+---
+
+## 4. Feral GameMode Kullanımı
+
+Feral Interactive tarafından geliştirilen **GameMode**, bir oyun başladığında arka planda sistem ayarlarını anlık olarak oyuna göre optimize eder (CPU governor, I/O önceliği, GPU aşırı hızlandırma vb.).
+
+### Kurulum ve Kullanım
+Dağıtımınıza göre `gamemode` paketini yükleyin. Oyunları GameMode ile başlatmak için başlatma parametrelerine aşağıdaki komutu ekleyin:
+
 ```bash
 gamemoderun %command%
 ```
 
 ---
 
-## Bellek (RAM) ve Depolama Optimizasyonları
+## 5. Steam ve Oyun Başlatma Seçenekleri (Launch Options)
 
-Linux'un bellek yönetimi son derece gelişmiştir, ancak oyunlar gibi yoğun bellek kullanan uygulamalar için bazı parametrelerin optimize edilmesi gerekir.
+Steam üzerindeki oyunların özellikler menüsüne girerek "Başlatma Seçenekleri" (Launch Options) kısmına eklenen komutlar doğrudan performansa etki eder.
 
-### Esync ve Fsync (Dosya Tanımlayıcı Limitleri)
-
-Windows oyunları çoklu iş parçacığı (multi-threading) senkronizasyonu için belirli API'ler kullanır. Linux'ta bunu simüle etmek için **Esync** (eventfd tabanlı) ve daha modern olan **Fsync** (futex_waitv tabanlı, kernel seviyesinde) kullanılır. Fsync, CPU kullanımını azaltarak FPS düşüşlerini engeller.
-
-Fsync'in çalışabilmesi için sistemdeki maksimum dosya tanımlayıcı limitinin (file descriptor limit) yüksek olması gerekir.
-
-**Limit kontrolü:**
+### Örnek Optimizasyon Dizesi (AMD Sürücüleri İçin):
 ```bash
-ulimit -Hn
-```
-Eğer bu değer `1048576` veya daha yüksek değilse, `/etc/security/limits.conf` dosyasına şu satırları ekleyin:
-
-```text
-* hard nofile 1048576
-* soft nofile 1048576
+gamemoderun mangohud RADV_PERFTEST=nggc %command%
 ```
 
-### VRAM ve Swap (Takas Alanı) Yönetimi
-
-Sistem belleği dolduğunda Linux verileri diskteki Swap (Takas) alanına yazar. Bu durum oyunlarda ani FPS düşüşlerine (stutter) yol açar. `swappiness` değerini düşürerek sistemin diske yazma eğilimini azaltabilirsiniz.
-
-**Swappiness değerini 10'a düşürmek için:**
+### Örnek Optimizasyon Dizesi (Nvidia Sürücüleri İçin):
 ```bash
-sudo sysctl vm.swappiness=10
+gamemoderun mangohud __NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia %command%
 ```
-Bu ayarı kalıcı yapmak için `/etc/sysctl.d/99-sysctl.conf` dosyasına `vm.swappiness=10` satırını ekleyin.
+
+### Parametrelerin Anlamları:
+* `gamemoderun`: Feral GameMode'u tetikler.
+* `mangohud`: FPS, sıcaklık, RAM/VRAM kullanımını ekranda gösterir ve FPS limitleme imkanı tanır.
+* `PROTON_NO_ESYNC=1` / `PROTON_NO_FSYNC=1`: Eski sistemlerde veya belirli oyunlarda çökme sorunlarını çözer.
 
 ---
 
-## Sonuç ve Performans Karşılaştırması
+## 6. Masaüstü Ortamı (Compositor) Optimizasyonu
 
-Doğru yapılandırılmış bir Linux sistemi, oyunlarda Windows 11 ile başa baş veya bazı senaryolarda (özellikle CPU darboğazı olan oyunlarda) daha yüksek performans sunar.
+Masaüstü ortamının pencere yöneticisi (Compositor), oyunlar üzerinde **Girdi Gecikmesine (Input Lag)** ve FPS düşüşlerine neden olabilir.
 
-| Optimizasyon Adımı | Etkilediği Alan | Beklenen Performans Artışı |
-| :--- | :--- | :--- |
-| **Zen/XanMod Kernel** | Sistem Gecikmesi & %1 Low FPS | %5 - %10 daha kararlı kare hızları |
-| **Fsync & Esync** | CPU Çoklu Çekirdek Verimliliği | Yüksek CPU kullanan oyunlarda %15'e varan FPS artışı |
-| **Mesa (RADV) / NVIDIA Proprietary** | Grafik İşleme Gücü | Maksimum GPU kullanımı ve kararlılık |
-| **GameMode** | Arka Plan Kaynak Yönetimi | Anlık takılmaların (stuttering) önlenmesi |
+### X11 Kullanıcıları İçin:
+Oyun tam ekrana geçtiğinde Compositor'ün devre dışı kalması gerekir (Bypass Compositor).
+* **KDE Plasma:** Ayarlar > Ekran ve Monitör > İşleyici bölümünden "Tam ekran pencerelerinin işleyiciyi devre dışı bırakmasına izin ver" seçeneğini işaretleyin.
+* **XFCE:** `xfwm4-tweaks-settings` altından pencere yöneticisi bileşik oluşturmayı tam ekranda kapatın.
 
-Yukarıdaki adımları donanımınıza uygun şekilde uygulayarak, Linux işletim sisteminizi profesyonel bir oyun platformuna dönüştürebilirsiniz.
+### Wayland Kullanıcıları İçin:
+* Wayland, geleneksel compositor mantığını değiştirmiştir.
+* VRR (Variable Refresh Rate / G-Sync / FreeSync) desteğinin aktif olduğundan emin olun.
+* Nvidia 555 ve üzeri sürücülerde **Explicit Sync** desteği geldiği için Wayland üzerindeki takılmalar tamamen çözülmüştür.
+
+---
+
+## 7. Bellek (RAM) ve Swap (Sanal Bellek) Ayarları
+
+Bellek yönetimi, özellikle 16 GB ve altı RAM'e sahip sistemlerde oyunların aniden kapanmasını ve takılmasını engeller.
+
+### Swappiness Değerini Düşürme
+Sistemin RAM varken diski (Swap) kullanmasını engellemek için `swappiness` değerini 10'a düşürün.
+
+1. `/etc/sysctl.d/99-swappiness.conf` dosyasını oluşturun veya düzenleyin:
+   ```text
+   vm.swappiness=10
+   ```
+2. Değişikliği uygulayın:
+   ```bash
+   sudo sysctl -p /etc/sysctl.d/99-swappiness.conf
+   ```
+
+### zRAM Kullanımı
+Fiziksel RAM yetersiz kaldığında diske yazmak yerine RAM'in bir bölümünü sıkıştırarak kullanan `zram-generator` paketini aktif edin. Bu işlem, diske erişim gecikmesini ortadan kaldırarak oyunların çökmesini engeller.
+
+---
+
+## Özet Performans Kontrol Listesi
+
+1. **GPU Sürücüsü:** Güncel mi? (Nvidia için Proprietary, AMD için MESA/RADV).
+2. **CPU Governor:** `performance` modunda mı?
+3. **GameMode:** Yüklü ve Steam başlatma seçeneğine `gamemoderun %command%` eklendi mi?
+4. **Proton:** Oyun için en uygun `Proton-GE` sürümü seçildi mi?
+5. **Compositor:** Tam ekranda devre dışı bırakılıyor mu?
+6. **Esync/Fsync:** Kernel destekliyor mu? (`fsync` destekli kernel önerilir).

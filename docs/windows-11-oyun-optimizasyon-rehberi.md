@@ -1,128 +1,124 @@
 ---
-title: windows 11 oyun optimizasyon rehberi
-description: windows 11 oyun optimizasyon rehberi hakkında detaylı optimizasyon ve donanım rehberi.
+title: "windows 11 oyun optimizasyon rehberi"
+description: "windows 11 oyun optimizasyon rehberi hakkında detaylı teknik rehber, performans analizi ve karşılaştırma."
 ---
 
-# Windows 11 Oyun Optimizasyon Rehberi: Maksimum FPS ve Düşük Gecikme İçin Gelişmiş Ayarlar
+# Windows 11 Oyun Optimizasyon Rehberi: Maksimum FPS ve Düşük Gecikme
 
-Windows 11, modern oyun mimarileri (DirectX 12 Ultimate, DirectStorage, Auto HDR) için optimize edilmiş bir çekirdeğe sahip olsa da, varsayılan işletim sistemi yapılandırması maksimum oyun performansı için tasarlanmamıştır. Arka plan servisleri, sanallaştırma tabanlı güvenlik katmanları ve agresif güç tasarrufu algoritmaları, donanımınızın tam potansiyeline ulaşmasını engeller.
+Windows 11, gelişmiş bellek yönetimi ve yeni nesil donanım desteği ile güçlü bir işletim sistemidir. Ancak, varsayılan kurulumda gelen birçok güvenlik, arka plan hizmeti ve görsel efekt, oyun performansını ve girdi gecikmesini (input lag) olumsuz etkiler. 
 
-Bu teknik rehber, Windows 11 işletim sisteminizi kernel (çekirdek) seviyesinden sürücü katmanına kadar optimize ederek donanım darboğazlarını (bottleneck) minimuma indirmeyi ve girdi gecikmesini (input lag) en alt düzeye düşürmeyi amaçlamaktadır.
+Bu rehber, Windows 11 işletim sistemini minimum sistem kaynağı tüketimi, maksimum FPS ve en düşük kare zamanı (frametime) dalgalanması için optimize edecek teknik adımları içermektedir.
 
 ---
 
-## Çekirdek Seviyesinde Windows 11 Optimizasyonu
+## 1. Çekirdek İşletim Sistemi ve Güvenlik Ayarları
 
-Windows 11'in güvenlik odaklı mimarisi, oyunlarda CPU ve bellek alt sistemine ek yük getirir. Bu yükü azaltmak, oyun içi minimum FPS (1% ve 0.1% low) değerlerini doğrudan artırır.
+### VBS (Virtualization-based Security) ve HVCI'yi Devre Dışı Bırakma
+Windows 11'de varsayılan olarak açık gelen Sanallaştırma Tabanlı Güvenlik (VBS) ve Bellek Bütünlüğü (HVCI), işlemci komut setlerine ek yük getirerek oyunlarda %5 ile %15 arasında FPS kaybına neden olur.
 
-### Sanallaştırma Tabanlı Güvenlik (VBS) ve HVCI Kapatma
-Virtualization-Based Security (VBS) ve Hypervisor-Protected Code Integrity (HVCI / Çekirdek Yalıtımı), Windows 11'de varsayılan olarak etkindir. Bu özellikler, belleğin güvenli bir bölgesini izole etmek için donanım sanallaştırmasını kullanır. Ancak, CPU'nun bellek yönetim birimine (MMU) ek yük bindirerek oyunlarda **%5 ile %15 arasında performans kaybına** yol açar.
+1. **Başlat** menüsüne `Çirdek Yalıtımı` (Core Isolation) yazın ve açın.
+2. **Bellek Bütünlüğü** (Memory Integrity) seçeneğini **Kapalı** konuma getirin.
+3. Sistemi yeniden başlatın.
 
-**VBS ve HVCI'ı Devre Dışı Bırakma Adımları:**
-1. Başlat menüsüne **Çekirdek Yalıtımı** (Core Isolation) yazın ve açın.
-2. **Bellek Bütünlüğü** (Memory Integrity) seçeneğini "Kapalı" konuma getirin.
-3. Başlat'a sağ tıklayıp *Terminal (Yönetici)* seçeneğini açın ve şu komutu çalıştırarak sanallaştırma tabanlı güvenliği tamamen kapatın:
-   ```cmd
-   bcdedit /set hypervisorlaunchtype off
-   ```
-4. Bilgisayarınızı yeniden başlatın.
+> **Teknik Not:** Bu ayar, çekirdek düzeyindeki güvenlik katmanını esnetir. Yalnızca güvenilir yazılımlar kullanan oyuncu bilgisayarları için kapatılması önerilir.
 
-### Donanım Hızlandırmalı GPU Zamanlaması (HAGS) Aktivasyonu
-Hardware-Accelerated GPU Scheduling (HAGS), video belleği (VRAM) yönetimini CPU'dan alarak doğrudan GPU'nun kendi özel zamanlama işlemcisine devreder. Bu işlem, CPU üzerindeki sürücü yükünü (driver overhead) azaltır ve girdi gecikmesini düşürür. Ayrıca, NVIDIA DLSS 3 Frame Generation teknolojisinin çalışması için bu ayarın açık olması zorunludur.
+### Donanım Hızlandırmalı GPU Zamanlaması (HAGS) ve Pencereli Oyun Optimizasyonu
+HAGS, VRAM yönetim yükünü CPU'dan alarak doğrudan GPU'ya devreder. Windows 11 ile gelen Pencereli Oyun Optimizasyonu ise DirectX 11 oyunlarının DirectX 12 benzeri düşük gecikmeli çalışmasını sağlar.
 
-**HAGS Nasıl Etkinleştirilir?**
-1. **Ayarlar > Sistem > Monitör > Grafik** yolunu izleyin.
+1. **Ayarlar > Sistem > Ekran > Grafik** yolunu izleyin.
 2. **Varsayılan grafik ayarlarını değiştir** seçeneğine tıklayın.
-3. **Donanım hızlandırmalı GPU zamanlaması** seçeneğini "Açık" duruma getirin.
-
-### Windows Oyun Modu (Game Mode) Yapılandırması
-Windows 11'deki "Oyun Modu", işletim sisteminin iş parçacığı zamanlayıcısını (Thread Scheduler) optimize eder. Oyun modu etkinken, oyun işlemi (process) CPU üzerinde en yüksek önceliğe (High Priority) sahip olur ve arka plan işlemleri (Windows Update, telemetri vb.) askıya alınır.
-
-*   **Ayarlar > Oyun > Oyun Modu** bölümüne gidin ve bu özelliği **Açık** konuma getirin.
+3. **Donanım hızlandırmalı GPU zamanlaması** seçeneğini **Açık** yapın.
+4. **Pencereli oyunlar için optimizasyonlar** seçeneğini **Açık** konuma getirin.
 
 ---
 
-## Donanım ve Sürücü Seviyesinde Optimizasyon
+## 2. Windows Oyun Modu ve Güç Planı Optimizasyonu
 
-Yazılımsal optimizasyonların donanımla tam uyumlu çalışması için veri yolları ve güç yönetim şemaları optimize edilmelidir.
+### Oyun Modu (Game Mode) Yapılandırması
+Windows 11'in Oyun Modu, Windows 10'a kıyasla daha kararlıdır. Arka plan işlemlerinin thread önceliğini düşürür ve oyun işlemine yüksek öncelikli CPU çekirdekleri atar.
 
-### CPU Çekirdek Park Etme (Core Parking) ve Güç Planları
-Windows, enerji tasarrufu sağlamak amacıyla boşta duran CPU çekirdeklerini "park" moduna alır. Bir oyun aniden işlem gücü talep ettiğinde, park edilmiş çekirdeklerin uyanması milisaniyeler mertebesinde gecikmelere ve dolayısıyla anlık takılmalara (stuttering) neden olur.
+* **Ayarlar > Oyun > Oyun Modu** adımlarını takip edin ve ayarı **Açık** hale getirin.
+* **Yakalama (Captures)** sekmesine giderek **Arka planda kaydet** özelliğini **Kapalı** yapın.
 
-**Nihai Performans (Ultimate Performance) Güç Planını Aktif Etme:**
-Bu plan, donanım gecikmelerini en aza indirmek için tasarlanmış gizli bir Windows şemasıdır.
+### "Nihai Performans" (Ultimate Performance) Güç Planını Etkinleştirme
+Yüksek performans güç planı, CPU çekirdeklerinin park edilmesini (core parking) önler ve işlemci frekansının anlık düşüşlerini engeller.
 
-1. *Terminal (Yönetici)* ekranını açın.
-2. Aşağıdaki komutu yapıştırıp Enter tuşuna basın:
+1. **Komut İstemi'ni (CMD)** Yönetici olarak çalıştırın.
+2. Aşağıdaki kodu yapıştırın ve Enter'a basın:
    ```cmd
    powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61
    ```
-3. **Denetim Masası > Donanım ve Ses > Güç Seçenekleri** bölümüne gidin ve yeni eklenen **Nihai Performans** planını seçin.
-
-### GPU Sürücü Temizliği (DDU) ve Kontrol Paneli Ayarları
-Eski sürücü kalıntıları, Windows 11'in grafik alt sisteminde çakışmalara yol açar. Temiz bir kurulum için **Display Driver Uninstaller (DDU)** kullanılmalıdır.
-
-**NVIDIA Denetim Masası Optimizasyonu:**
-*   **Düşük Gecikme Oranı Modu (Low Latency Mode):** "Açık" veya "Ultra" (CPU darboğazı varsa Ultra seçilmelidir; bu ayar kare kuyruğunu sıfırlayarak gecikmeyi azaltır).
-*   **Güç Yönetimi Modu:** "Maksimum performansı tercih et" (GPU saat hızlarının oyun esnasında düşmesini engeller).
-*   **Doku Süzme - Kalite:** "Yüksek Performans".
-
-### Resizable BAR (ReBAR) ve DirectStorage Yapılandırması
-*   **Resizable BAR:** CPU'nun PCIe veri yolu üzerinden GPU belleğinin (VRAM) tamamına tek seferde erişmesini sağlar. BIOS üzerinden *Above 4G Decoding* ve *ReBAR* seçenekleri etkinleştirilmelidir.
-*   **DirectStorage:** NVMe SSD'nizdeki oyun varlıklarının (asset), CPU'yu bypass ederek doğrudan GPU'ya aktarılmasını sağlar. Bu teknolojiden tam yararlanmak için oyunların kurulu olduğu diskin **PCIe Gen3 veya üzeri bir NVMe SSD** olması ve dosya sisteminin **NTFS** olarak biçimlendirilmesi gerekir.
+3. **Denetim Masası > Güç Seçenekleri** bölümüne gidin.
+4. Yeni eklenen **Nihai Performans** planını seçin.
 
 ---
 
-## Gelişmiş Kayıt Defteri (Registry) ve Sistem İnce Ayarları
+## 3. Donanım ve Sürücü Seviyesinde Yapılandırma
 
-İşletim sisteminin ağ ve işlem önceliklendirme algoritmalarını Kayıt Defteri üzerinden değiştirerek daha kararlı bir oyun deneyimi elde edebilirsiniz.
+### BIOS/UEFI Ayarları: XMP/EXPO ve ReBAR
+Yazılımsal optimizasyonların etkili olabilmesi için donanımın tam kapasitede çalışması gerekir.
 
-> **Önemli Uyarı:** Kayıt defterinde değişiklik yapmadan önce ilgili anahtarların yedeğini alınız.
+* **XMP / EXPO:** BIOS'a girerek RAM'lerinizin üretici tarafından vaat edilen frekans ve gecikme değerlerinde (CL) çalıştığından emin olun (Varsayılan JEDEC frekansında kalmamalıdır).
+* **Resizable BAR (AMD Smart Access Memory):** CPU'nun GPU VRAM'inin tamamına tek seferde erişmesini sağlar. BIOS üzerinden `Re-Size BAR Support` ve `Above 4G Decoding` seçeneklerini **Enabled** yapın.
 
-### Network Throttling Index ve Ağ Gecikmesini (Ping) Azaltma
-Windows, multimedya dışı ağ trafiğini sınırlayarak ağ kartı kaynaklarını korumaya çalışır. Çevrimiçi oyunlarda bu durum paket kaybına (packet loss) ve ping dalgalanmalarına yol açar.
+### GPU Sürücü Yapılandırması (NVIDIA Control Panel)
+Grafik kartı panelindeki optimizasyonlar kare süresi kararlılığını doğrudan etkiler.
 
-1. `Win + R` tuşlarına basıp `regedit` yazarak Kayıt Defteri'ni açın.
-2. Şu yola gidin:
-   `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile`
-3. **NetworkThrottlingIndex** değerine çift tıklayın, taban değerini *Onaltılık (Hexadecimal)* yapın ve değer verisini `ffffffff` olarak değiştirin (bu işlem sınırlamayı devre dışı bırakır).
-4. Aynı konumdaki **SystemResponsiveness** değerini `0` yapın (arka plan işlemlerine ayrılan CPU rezervasyonunu sıfırlar).
-
-### FSE (Full-Screen Optimizations) ve Gecikme Yönetimi
-Windows 11, klasik tam ekran modu yerine "Pencereli Tam Ekran" modunu optimize eden hibrit bir sunum modeli kullanır. Ancak bazı DirectX 11 ve eski oyunlarda bu durum girdi gecikmesine yol açar.
-
-**Gecikmeyi Azaltmak İçin:**
-1. Oyunun `.exe` dosyasına sağ tıklayıp **Özellikler** seçeneğini seçin.
-2. **Uyumluluk** sekmesine gelin.
-3. **Tam ekran iyileştirmelerini devre dışı bırak** (Disable full-screen optimizations) seçeneğini işaretleyin.
+* **Bağlantılı Optimizasyon (Threaded Optimization):** Açık
+* **Güç Yönetimi Modu:** Maksimum performansı tercih et
+* **Düşük Gecikme Oranı Modu (Low Latency Mode):** On veya Ultra (NVIDIA Reflex desteklemeyen oyunlar için)
+* **Doku Süzme - Kalite:** Yüksek Performans
 
 ---
 
-## Windows 11 "Debloat" İşlemleri: Gereksiz Servisleri Devre Dışı Bırakma
+## 4. Arka Plan Hizmetleri ve Ağ Gecikmesi (Ping) Optimizasyonu
 
-Windows 11, arka planda RAM ve CPU döngülerini tüketen birçok telemetri ve widget servisiyle birlikte gelir. Bu servislerin kapatılması, sistem kaynaklarını tamamen oyuna tahsis eder.
+### Gereksiz Hizmetleri ve Başlangıç Uygulamalarını Kapatma
+Sistem kaynaklarını tüketen arka plan süreçlerini minimize edin.
 
-### Devre Dışı Bırakılması Gereken Windows Servisleri
-`services.msc` konsolu üzerinden aşağıdaki servisleri bulup başlangıç türlerini **Devre Dışı** olarak ayarlayın:
+1. **Görev Yöneticisi (Ctrl + Shift + Esc) > Başlangıç Uygulamaları** sekmesine gidin. Discord, Spotify, Steam gibi oyun esnasında şart olmayan tüm uygulamaları devre dışı bırakın.
+2. `services.msc` komutu ile Hizmetler penceresini açın.
+   * **SysMain (Superfetch):** SSD kullanan sistemlerde devre dışı bırakılabilir. RAM kullanımını düşürür.
+   * **Connected User Experiences and Telemetry:** Devre dışı bırakın (Gizlilik ve CPU yükünü azaltır).
 
-| Servis Adı | Teknik Açıklama | Devre Dışı Bırakma Nedeni |
+### Ağ Gecikmesini (Nagle Algoritması) Devre Dışı Bırakma
+Nagle Algoritması, küçük veri paketlerini birleştirerek gönderir. Bu durum web gezintisinde verimlilik sağlasa da online oyunlarda ping süresini artırır.
+
+1. **Win + R** basıp `regedit` yazın.
+2. Aşağıdaki dizine gidin:
+   `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\`
+3. İlgili ağ bağdaştırıcınızın GUID klasörünü bulun (içinde IP adresinizin olduğu klasör).
+4. Sağ tıklayıp iki adet yeni **DWORD (32 bit) Değeri** oluşturun:
+   * Isim: `TcpAckFrequency` -> Değer: `1` (Hexadecimal)
+   * Isim: `TCPNoDelay` -> Değer: `1` (Hexadecimal)
+
+---
+
+## 5. Görsel Efektler ve Disk Temizliği
+
+### Windows Görsel Efektlerini Minimuma İndirme
+Windows 11'in akıcı pencere animasyonları GPU/CPU işleme kuyruğuna yük getirir.
+
+1. **Win + R** tuşlarına basıp `sysdm.cpl` yazın.
+2. **Gelişmiş** sekmesinden **Performans** altındaki **Ayarlar** butonuna tıklayın.
+3. **En iyi performans için ayarla** seçeneğini seçin.
+4. Sadece **Ekran yazı tipi kenarlarını düzelt** ve **Simgeler yerine küçük resimler göster** seçeneklerini işaretleyip kaydedin.
+
+### Geçici Dosyaları Temizleme (Storage Sense)
+Oyun güncellemeleri ve Windows derlemeleri sonrası biriken önbellek dosyaları disk I/O performansını düşürür.
+
+1. **Ayarlar > Sistem > Depolama** bölümüne gidin.
+2. **Depolama Mantığı (Storage Sense)** özelliğini **Açık** konuma getirin.
+3. **Geçici Dosyalar** sekmesine girerek `Windows Update Temizleme` ve `Gölgeli Kopya` verilerini silin.
+
+---
+
+## Özet Performans Kontrol Listesi
+
+| Yapılandırılan Ayar | Hedef Etki | Risk / Yan Etki |
 | :--- | :--- | :--- |
-| **Connected User Experiences and Telemetry** | Kullanım verilerini Microsoft'a gönderir. | CPU ve disk G/Ç (I/O) kaynaklarını tüketir. |
-| **SysMain (Eski adıyla Superfetch)** | Sık kullanılan uygulamaları RAM'e önceden yükler. | Oyun esnasında RAM tahsisatını kararsızlaştırır. |
-| **Windows Arama (Windows Search)** | Arka planda dosya indekslemesi yapar. | Oyun sırasında ani disk okuma/yazma takılmalarına sebep olur. |
-
-### Telemetri ve Widget'ların Kapatılması
-Windows 11 Widget altyapısı, arka planda sürekli olarak `WebView2` süreçlerini çalıştırır.
-
-*   **Ayarlar > Kişiselleştirme > Görev Çubuğu** yolunu izleyin ve **Widget'lar** seçeneğini kapatın.
-*   Gizlilik ve Güvenlik sekmesinden tüm **Tanılama ve Geri Bildirim** gönderimlerini devre dışı bırakın.
-
----
-
-## Sonuç ve Performans Analizi
-
-Bu rehberde uygulanan optimizasyonların başarısı, donanım konfigürasyonunuza bağlı olarak değişkenlik gösterecektir. Yapılan değişikliklerin kararlılığını ve performans üzerindeki etkisini ölçmek için aşağıdaki adımları takip etmeniz önerilir:
-
-1. **Sentetik Testler:** Değişiklikler öncesinde ve sonrasında **3DMark Time Spy** veya **Cinebench R23** testleri ile sistem kararlılığını ölçün.
-2. **Oyun İçi Metrikler:** **MSI Afterburner** ve **RTSS (RivaTuner Statistics Server)** kullanarak oyun içi %1 ve %0.1 Low FPS değerlerini takip edin. Bu değerlerdeki artış, anlık takılmaların (stuttering) azaldığının en büyük kanıtıdır.
-3. **Gecikme Analizi:** NVIDIA LDAT veya yazılımsal olarak **PresentMon** aracıyla kare oluşturma sürelerini (Frame Time) analiz ederek girdi gecikmesindeki düşüşü gözlemleyin.
+| **VBS / HVCI Kapatma** | +%5-15 FPS, Düşük Frametime | Çekirdek düzeyde güvenlik azalır |
+| **HAGS & Pencereli Opt.** | VRAM yükü azalır, Düşük Input Lag | Yok |
+| **Nihai Performans Planı** | CPU Throttle ve Stuttering önlenir | Güç tüketimi artar |
+| **ReBAR / XMP** | Yüksek veri aktarım hızı, Yüksek FPS | BIOS müdahalesi gerektirir |
+| **Nagle Algoritması Pasif** | Ağ paket gecikmesi (Ping) düşer | Yok |

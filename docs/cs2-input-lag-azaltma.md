@@ -1,93 +1,98 @@
 ---
-title: cs2 input lag azaltma
-description: cs2 input lag azaltma hakkında detaylı optimizasyon ve donanım rehberi.
+title: "cs2 input lag azaltma"
+description: "cs2 input lag azaltma hakkında detaylı teknik rehber, performans analizi ve karşılaştırma."
 ---
 
-# CS2 Input Lag Azaltma: Donanım ve Yazılım Optimizasyon Rehberi
+# CS2 Input Lag Azaltma Rehberi: Sistem ve Oyun İçi Teknik Optimizasyonlar
 
-Counter-Strike 2 (CS2), Source 2 motorunun getirdiği yeni fiziksel hesaplamalar ve **sub-tick** sunucu altyapısı nedeniyle, girdi gecikmesine (input lag) karşı CS:GO'dan çok daha hassastır. Milisaniyelerle ölçülen bu gecikme, mermi tescilini (hit registration) ve sprey kontrolünü doğrudan etkiler. 
+Counter-Strike 2 (CS2), Source 2 motorunun getirdiği yenilenmiş fizik mantığı ve **Sub-tick** sistemi nedeniyle girdi gecikmesine (input lag) karşı CS:GO’ya kıyasla çok daha hassastır. Oyunda farenin tıklandığı an ile eylemin ekrana yansıdığı an arasındaki milisaniyelik gecikmeler, sprey kontrolünü ve tepe tepki süresini doğrudan etkiler. 
 
-Bu rehberde, donanım, işletim sistemi ve oyun motoru seviyesinde **CS2 input lag azaltma** yöntemlerini bilimsel ve teknik detaylarıyla inceleyeceğiz.
-
----
-
-## 1. Input Lag Nedir ve CS2'de Neden Kritik Önem Taşır?
-
-Giriş gecikmesi (input lag), farenize tıkladığınız an ile bu eylemin ekranda piksellere dönüşmesi arasında geçen süredir. CS2'nin sub-tick mimarisi, hareketlerinizi tick-rate sınırlarına bağlı kalmadan kaydeder; ancak yerel sisteminizdeki yüksek gecikme, sunucuya gönderilen paketlerin gecikmesine ve dolayısıyla "merminin gitmeme" hissiyatına yol açar.
-
-Sistem gecikmesi üç ana bileşenden oluşur:
-1. **Giriş Gecikmesi (Peripheral Latency):** Fare/klavyenin sinyali bilgisayara iletme süresi.
-2. **Oyun ve İşleme Gecikmesi (Game & Render Latency):** CPU'nun girdiyi işlemesi ve GPU'nun kareyi çizmesi arasında geçen süre.
-3. **Görüntü Gecikmesi (Display Latency):** Monitörün çizilen kareyi tarayıp ekrana yansıtma süresi.
+Bu rehber; donanım, işletim sistemi, ekran kartı sürücüleri ve oyun içi ayarlar düzeyinde **CS2 sistem gecikmesini (system latency) en alt seviyeye indirmek** için uygulamanız gereken teknik adımları içerir.
 
 ---
 
-## 2. Donanım Seviyesinde Input Lag Optimizasyonu
+## 1. Oyun İçi Grafik Ayarları ile Render Gecikmesini Düşürme
 
-Yazılımsal ayarlar, donanımınızın fiziksel sınırlarını aşamaz. Bu nedenle optimizasyona donanım katmanından başlanmalıdır.
+CS2'de grafik yükü arttıkça GPU kullanım oranı %99 seviyelerine ulaşır. GPU tam yükte çalıştığında render kuyruğu (render queue) uzar ve bu durum ciddi bir input lag oluşturur.
 
-### Monitör ve Görüntü Teknolojileri
-*   **Yüksek Yenileme Hızı (Hz):** 60Hz bir monitörün kare yenileme süresi 16.6 ms iken, 360Hz bir monitörde bu süre 2.7 ms'ye düşer. CS2 için minimum 144Hz, rekabetçi seviye için 240Hz veya 360Hz monitörler tercih edilmelidir.
-*   **G-Sync / FreeSync ve V-Sync Kombinasyonu:** Geleneksel V-Sync ciddi bir input lag kaynağıdır. Ancak, **NVIDIA Reflex + G-Sync (Açık) + V-Sync (Oyun İçi Kapalı, NVIDIA Denetim Masası Açık)** kombinasyonu, kare hızını monitörün maksimum Hz değerinin 3 FPS altına sabitleyerek yırtılmaları önler ve en kararlı kare geçiş süresini (frame pacing) sunar.
-
-### Çevre Birimleri (Mouse & Keyboard)
-*   **Polling Rate (Raporlama Hızı):** Farenizin raporlama hızını 1000Hz (1 ms) veya destekliyorsa 4000Hz/8000Hz (0.25 ms / 0.125 ms) değerine ayarlayın. Yüksek polling rate değerleri CPU yükünü artırır; bu nedenle güçlü bir işlemciniz (Ryzen 7 7800X3D veya Intel i7-13700K ve üzeri) yoksa 1000Hz en stabil seçenektir.
-*   **Debounce Delay:** Mekanik klavyelerde tuş basım algılama gecikmesini (debounce delay) klavye yazılımından en düşük değere (mümkünse 1 ms veya Rapid Trigger özellikli optik anahtarlarda 0.1 mm) indirin.
+* **NVIDIA Reflex Low Latency:** **AÇIK + BOOST (On + Boost)** olarak ayarlanmalıdır. "Boost" seçeneği, GPU'nun güç tasarrufu modlarına geçmesini engelleyerek çekirdek saat hızlarını (core clocks) sürekli yüksek tutar ve işlemci-ekran kartı arasındaki veriyi en hızlı şekilde işler.
+* **Görüntü Modu:** Mutlaka **Tam Ekran (Fullscreen)** seçilmelidir. "Pencereli" veya "Sınırlandırılmamış Pencereli" modlar, Windows Masaüstü Pencere Yöneticisi'nin (DWM) dikey senkronizasyon (V-Sync) katmanını devreye sokarak gecikmeyi artırır.
+* **Dikey Eşitleme (V-Sync):** **Kapat**. V-Sync, kareleri monitörün tazeleme hızına zorlarken devasa bir girdi gecikmesi yaratır.
+* **NVIDIA G-Sync / AMD FreeSync:** Yarışmacı (competitive) seviyede en düşük gecikme için **Kapatılması** önerilir. Eğer ekran yırtılmaları sizi çok rahatsız ediyorsa; G-Sync + Reflex ikilisi kullanılabilir ancak salt en düşük gecikme için kapalı kalmalıdır.
+* **Çoklu Örneklemeli Kenar Yumuşatma (MSAA):** **2x MSAA** veya **CMAA**. 4x ve 8x MSAA, GPU render süresini (frame time) uzatarak gecikmeyi artırır.
+* **FidelityFX Super Resolution (FSR):** **Devre Dışı (Devre Dışı - En Yüksek Kalite)**. FSR işlem yükünü azaltsa da görüntüye ölçekleme algoritmaları eklediği için milisaniyelik işleme gecikmeleri ekleyebilir. Yalnızca GPU'nuz çok zayıfsa açılmalıdır.
 
 ---
 
-## 3. İşletim Sistemi ve Sürücü Ayarları
-
-Windows ve ekran kartı sürücülerinin varsayılan ayarları genellikle enerji tasarrufu odaklıdır. Rekabetçi oyunlar için bu ayarların performans moduna alınması gerekir.
+## 2. Ekran Kartı Sürücü Optimizasyonları
 
 ### NVIDIA Denetim Masası Ayarları
-NVIDIA ekran kartı kullananlar için en düşük gecikmeyi sağlayan kritik ayarlar şunlardır:
+1. Masaüstüne sağ tıklayıp **NVIDIA Denetim Masası**'nı açın.
+2. **3D Ayarlarının Yönetilmesi** bölümüne gidin.
+3. **Düşük Gecikme Oranı Modu (Low Latency Mode):** Oyun içinde NVIDIA Reflex açık olduğu durumlarda Reflex bu ayarı devralır. Ancak genel sistem kararlılığı için **Ultra** veya **Açık** konumuna getirin.
+4. **Güç Yönetimi Modu:** **Maksimum Performansı Tercih Et**. (GPU'nun voltaj D3 durumlarına geçip gecikme yaratmasını önler).
+5. **Bağlantılı Optimizasyon (Threaded Optimization):** **Açık**. (CS2'nin çoklu çekirdek kullanımını optimize eder).
+6. **Doku Süzme - Kalite:** **Yüksek Performans**.
+7. **Shader Önbellek Boyutu (Shader Cache Size):** **10 GB** veya **Sınırsız (Unlimited)**. (Oyun sırasında anlık takılmaları ve buna bağlı input lag sıçramalarını engeller).
 
-*   **Düşük Gecikme Oranı Modu (Low Latency Mode):** **Ultra** veya **Açık (On)** konumuna getirin. Bu ayar, CPU'nun hazırladığı kare kuyruğunu (render queue) sıfıra indirerek doğrudan GPU'ya aktarır.
-*   **Güç Yönetimi Modu:** **Maksimum Performansı Tercih Et** olarak ayarlayın. Ekran kartı çekirdek saat hızlarının (core clocks) oyun esnasında dalgalanmasını önler.
-*   **Dikey Senkronizasyon (V-Sync):** G-Sync kullanmıyorsanız kesinlikle **Kapalı** yapın.
-*   **Bağlantılı Optimizasyon (Threaded Optimization):** **Açık** konumda olmalıdır. Source 2 motorunun çoklu çekirdek performansını optimize eder.
-
-### Windows Optimizasyonları
-*   **HAGS (Donanım Hızlandırmalı GPU Zamanlaması):** *Ayarlar > Sistem > Monitör > Grafik ayarları* altından HAGS'ı **Açık** konuma getirin. Bu, CPU üzerindeki zamanlama yükünü doğrudan GPU'ya devrederek render gecikmesini azaltır.
-*   **Oyun Modu (Game Mode):** Windows Oyun Modu'nu **Açık** konuma getirin. Bu mod, arka plan işlemlerinin CPU kaynaklarını tüketmesini engeller ve CS2'ye öncelik tanır.
-*   **USB Askıya Alma Ayarı:** *Denetim Masası > Güç Seçenekleri > Plan Ayarlarını Değiştir > Gelişmiş Güç Ayarları* altından "USB seçmeli askıya alma ayarını" **Devre Dışı** yapın. Bu, fare ve klavyenizin güç tasarrufu moduna geçip gecikme yaratmasını önler.
+### AMD Radeon Software Ayarları
+1. **Radeon Anti-Lag:** **Etkin**. (İşlemci ile ekran kartı arasındaki kare iletim temposunu eşitleyerek gecikmeyi düşürür).
+2. **Radeon Boost:** **Devre Dışı**. (Dinamik çözünürlük değişimleri sprey tutarlılığını bozar).
+3. **Radeon Image Sharpening:** **Devre Dışı**.
 
 ---
 
-## 4. CS2 Oyun İçi ve Başlatma Seçenekleri
+## 3. Fare (Mouse) ve Çevre Birimleri Optimizasyonu
 
-CS2'nin oyun içi grafik motoru ayarları, sistem gecikmesini doğrudan manipüle etmenize olanak tanır.
+Fare girdilerinin sisteme iletilme hızı ve sensörün işlenme süresi doğrudan fare ayarlarına bağlıdır.
 
-### Grafik Ayarları ve NVIDIA Reflex
-Oyun içi grafik ayarlarında performansı ve gecikmeyi etkileyen en önemli parametreler şunlardır:
+* **DPI ve Sensör Latansı:** Düşük DPI (örn. 400 DPI) kullanmak, yüksek DPI (örn. 1600 DPI) kullanmaya kıyasla sensörün hareketi algılama süresini (initial motion latency) birkaç milisaniye geciktirir. **1600 DPI** kullanıp oyun içi hassasiyeti (sensitivity) düşürmek, fare sensörünün tepki süresini teknik olarak hızlandırır.
+* **Polling Rate (Raporlama Hızı):** Minimum **1000 Hz** kullanılmalıdır. 2000 Hz, 4000 Hz veya 8000 Hz destekleyen farelerde işlemciniz (CPU) yeterince güçlü ise (örn. Ryzen 7 7800X3D seviyesi) daha yüksek Hz değerleri girdi gecikmesini düşürür. Ancak zayıf CPU'larda bu durum kare hızı düşüşlerine (FPS drops) yol açabilir.
+* **Windows İşaretçi Hassasiyetini Artır:** **Kapat**. (Windows arama çubuğuna `main.cpl` yazıp Fare Seçenekleri altından bu tiki kaldırın).
 
-| Ayar | Önerilen Değer | Teknik Açıklama |
-| :--- | :--- | :--- |
-| **NVIDIA Reflex Low Latency** | **Etkin + Takviye (Enabled + Boost)** | GPU saat hızlarını maksimumda tutar ve CPU render kuyruğunu tamamen ortadan kaldırır. |
-| **Dikey Eşitleme (V-Sync)** | **Devre Dışı** | Ekran kartı ve monitör senkronizasyon gecikmesini önler. |
-| **Görüntü Modu** | **Tam Ekran (Fullscreen)** | Windows Masaüstü Pencere Yöneticisi'nin (DWM) getirdiği ek 1 karelik gecikmeyi (yaklaşık 4-8 ms) baypas eder. |
-| **Çoklu Örnekleme Kenar Yumuşatma** | **CMAA2 veya 2x MSAA** | Yüksek MSAA değerleri GPU darboğazına yol açarak render gecikmesini artırır. |
-| **Gölge Kalitesi** | **Orta veya Yüksek** | CS2'de oyuncu gölgeleri taktiksel avantaj sağlar; ancak "Çok Yüksek" ayarı CPU/GPU darboğazı yaratır. |
+---
 
-### Başlatma Seçenekleri (Launch Options)
-Steam kütüphanenizde CS2'ye sağ tıklayıp *Özellikler > Başlatma Seçenekleri* kısmına aşağıdaki komutları ekleyin:
+## 4. Windows ve İşletim Sistemi Optimizasyonları
+
+Windows arka planındaki süreçler, kesme istekleri (IRQ) ve güç yönetimi protokolleri latency artışına neden olur.
+
+### Tam Ekran İyileştirmelerini Devre Dışı Bırakma
+1. `cs2.exe` dosyasını bulun (Genellikle: `Steam\steamapps\common\Counter-Strike Global Offensive\game\bin\win64`).
+2. `cs2.exe` dosyasına sağ tıklayıp **Özellikler > Uyumluluk** sekmesine gidin.
+3. **"Tam ekran iyileştirmelerini devre dışı bırak"** seçeneğini işaretleyin.
+
+### Windows Oyun Modu ve HAGS
+* **Oyun Modu (Game Mode):** **AÇIK**. Windows 10/11'de Oyun Modu, işlemci kaynaklarını doğrudan CS2'ye aktararak arka plan işlemlerinin gecikme yaratmasını engeller.
+* **Donanım Hızlandırmalı GPU Zamanlaması (HAGS):** Bu ayar ekran kartına göre değişiklik gösterir. Genellikle NVIDIA RTX serisi kartlarda **AÇIK** tutulması kare sürelerini (frame time) iyileştirirken, bazı sistemlerde mikro takılmalara yol açabilir. Test edilerek karar verilmelidir.
+
+### Güç Planı Ayarları
+* Windows Güç Seçenekleri'nden **Yüksek Performans** veya **Nihai Performans (Ultimate Performance)** modunu seçin. Bu sayede işlemci çekirdekleri "parking" (uyku) moduna geçmez ve sürekli maksimum frekansta kalır.
+
+---
+
+## 5. CS2 FPS Limitleme ve Konsol Komutları
+
+CS2'de FPS'i tamamen serbest bırakmak (fps_max 0) her zaman en düşük gecikmeyi sağlamaz. GPU kullanımı %99'a dayandığında sistem gecikmesi tavan yapar.
+
+* **FPS Kısıtlama Stratejisi:** Eğer ekran kartınız sürekli %99 kullanımda çalışıyorsa, FPS'i sisteminizin rahatlıkla verebildiği ve GPU kullanımını %90-95 civarında tutan bir değere sabitlemek (`fps_max 300` veya `fps_max 400` gibi) render gecikmesini stabilized eder.
+* **NVIDIA Reflex Aktifken:** Oyun içi Reflex açık olduğunda, sistem FPS'i otomatik olarak monitör tazeleme hızının ve GPU limitinin hemen altında sınırlandırarak en optimal latency eğrisini yakalar.
+
+### CS2 Başlatma Seçenekleri (Launch Options)
+Steam kütüphanenizde CS2'ye sağ tıklayıp **Özellikler > Genel > Başlatma Seçenekleri** kısmına aşağıdaki komutları ekleyebilirsiniz:
 
 ```text
--nojoy -high +cl_updaterate 128
+-nojoy -high -threads [Çekirdek_Sayısı + 1]
 ```
-
-*   `-nojoy`: Joystick/Gamepad taramasını devre dışı bırakarak CPU üzerindeki gereksiz thread yükünü kaldırır.
-*   `-high`: CS2 işlemine Windows üzerinde yüksek öncelik (CPU priority) atar. (Eğer sisteminizde kararsızlığa yol açarsa bu komutu kaldırın).
-
-### Konsol Komutları (CFG)
-Oyun içi konsolu (`~`) açarak aşağıdaki komutları uygulayın:
-
-*   `fps_max 0` veya `fps_max [Monitör Hz x 2]`: Sınırsız FPS genellikle en düşük input lag'i sunar. Ancak FPS değeriniz çok dalgalıysa (örneğin 150 ile 400 arası), FPS'i stabil bir değere sabitlemek kare geçiş süresini (frametime) düzelterek daha akıcı bir deneyim sağlar.
-*   `engine_low_latency_sleep_after_client_tick true`: NVIDIA Reflex aktifken karelerin daha tutarlı işlenmesini sağlar ve mikro takılmaları azaltır.
+*(Not: `-threads` komutuna fiziki çekirdek sayınızı girmelisiniz, sanal çekirdekleri dahil etmek bazı işlemcilerde gecikmeyi artırabilir.)*
 
 ---
 
-## 5. Sonuç ve Performans Takibi
+## Özet Teknik Kontrol Listesi
 
-CS2'de input lag'i minimize etmek, tek bir ayardan ziyade donanım, işletim sistemi ve oyun içi ayarların bütünsel bir optimizasyonudur. Yaptığınız değişikliklerin etkisini ölçmek için oyun içindeyken konsola `cl_showfps 2` veya `telemetry` komutlarını yazarak **Frame Time (Kare Süresi)** değerini milisaniye cinsinden takip edin. Bu değerin olabildiğince düşük ve sabit (örneğin 3 ms ve altı) olması, başarılı bir optimizasyon gerçekleştirdiğinizi gösterir.
+| Parametre | Tavsiye Edilen Ayar | Nedeni |
+| :--- | :--- | :--- |
+| **NVIDIA Reflex** | On + Boost | GPU saat hızını yüksek tutar, render kuyruğunu sıfırlar. |
+| **Görüntü Modu** | Tam Ekran (Fullscreen) | DWM masaüstü gecikmesini baypas eder. |
+| **Fare DPI / Hz** | 1600 DPI / 1000Hz+ | Sensörün başlangıç hareket gecikmesini düşürür. |
+| **V-Sync / G-Sync** | Kapalı (Off) | Ekran eşitleme tampon belleğini (buffer) kaldırır. |
+| **Güç Planı** | Nihai Performans | CPU/GPU voltaj düşüşlerinden kaynaklı lag'ı önler. |

@@ -1,121 +1,128 @@
 ---
-title: windows 11 gereksiz servisler kapatma
-description: windows 11 gereksiz servisler kapatma hakkında detaylı optimizasyon ve donanım rehberi.
+title: "windows 11 gereksiz servisler kapatma"
+description: "windows 11 gereksiz servisler kapatma hakkında detaylı teknik rehber, performans analizi ve karşılaştırma."
 ---
 
-# Windows 11 Gereksiz Servisler Kapatma Rehberi: Performans ve RAM Optimizasyonu
+# Windows 11 Gereksiz Servisleri Kapatma Rehberi: Performans ve Hız Optimizasyonu
 
-Windows 11, modern donanımlar için optimize edilmiş bir işletim sistemi olsa da, arka planda çalışan ve birçok kullanıcı için hiçbir işlev ifade etmeyen onlarca servis (hizmet) barındırır. Bu servisler; CPU döngülerini tüketir, RAM (Rastgele Erişimli Bellek) üzerinde gereksiz "Commit Charge" (taahhüt edilen bellek) oluşturur ve disk G/Ç (Giriş/Çıkış) işlemlerini artırarak sistem gecikmesini (latency) yükseltir.
+Windows 11, arka planda varsayılan olarak gelen onlarca servis (hizmet) çalıştırır. Bu servislerin birçoğu ortalama bir ev kullanıcısı veya oyuncu için gereksizdir. Arka planda çalışan lüzumsuz servislerin kapatılması; CPU kullanımını düşürür, RAM (bellek) tüketimini azaltır ve sistemin tepki süresini hızlandırır.
 
-Bu teknik rehberde, Windows 11'in kararlılığını bozmadan, donanım kaynaklarınızı serbest bırakmak için kapatabileceğiniz gereksiz servisleri, risk analizleriyle birlikte inceliyoruz.
+Bu rehberde, Windows 11 sistem kararlılığını bozmadan güvenle kapatabileceğiniz veya "Elle" moduna alabileceğiniz servisler teknik detaylarıyla listelenmiştir.
 
 ---
 
-## Windows 11 Servis Yönetimi Neden Önemlidir?
+## Windows Hizmetler Yöneticisine Erişim
 
-İşletim sistemi mimarisinde her servis, arka planda bir `svchost.exe` işlemi altında veya bağımsız bir süreç olarak çalışır. Gereksiz servislerin açık kalması şu donanımsal ve yazılımsal maliyetlere yol açar:
+İşlemleri gerçekleştirmek için Windows Hizmetler arabirimini açmanız gerekir:
 
-*   **Bağlam Geçişi (Context Switching):** CPU çekirdekleri, aktif olmayan servislerin iş parçacıkları (threads) arasında sürekli geçiş yapmak zorunda kalır. Bu durum mikro gecikmelere yol açar.
-*   **Bellek Ayak İzi (Memory Footprint):** Her aktif servis, RAM üzerinde fiziksel ve sanal bellek alanı işgal eder.
-*   **Güç Tüketimi:** Arka plan aktiviteleri, CPU'nun daha yüksek güç durumlarında (C-states yerine P-states) kalmasına neden olarak özellikle dizüstü bilgisayarlarda pil ömrünü kısaltır.
+1. `Win + R` tuş kombinasyonu ile **Çalıştır** penceresini açın.
+2. `services.msc` yazın ve **Enter** tuşuna basın.
+3. Değiştirmek istediğiniz hizmete çift tıklayarak **Başlangıç türü** seçeneğini **Devre Dışı** veya **Elle** olarak değiştirin.
 
 ---
 
 ## Güvenle Kapatılabilecek Windows 11 Servisleri
 
-Aşağıdaki tabloda, genel kullanıcı senaryolarında kapatılması sistem kararlılığına zarar vermeyen, **windows 11 gereksiz servisler kapatma** listesinde yer alan kritik hizmetler ve işlevleri listelenmiştir.
+Aşağıdaki servisler, kullanım senaryonuza bağlı olarak sistem performansını artırmak için kapatılabilir.
 
-| Servis Adı (Görünen Ad) | Sistem Adı (Service Name) | Varsayılan Durum | Kapatma Nedeni / Senaryosu |
-| :--- | :--- | :--- | :--- |
-| **Bağlı Kullanıcı Deneyimleri ve Telemetri** | `DiagTrack` | Otomatik | Microsoft'a kullanım verileri gönderir. Gizlilik ve CPU tasarrufu için kapatılmalıdır. |
-| **SysMain** (Eski adıyla Superfetch) | `SysMain` | Otomatik | SSD kullanan sistemlerde gereksiz disk yazma işlemi yapar. SSD ömrü ve performansı için kapatılabilir. |
-| **Yazdırma Biriktiricisi** | `Spooler` | Otomatik | Eğer bilgisayarınıza bağlı bir yazıcı yoksa tamamen gereksizdir. |
-| **Dokunmatik Klavye ve El Yazısı Paneli** | `TabletInputService` | Elle | Dokunmatik ekran veya grafik tablet kullanmıyorsanız gereksiz kaynak tüketir. |
-| **Windows Arama** (Windows Search) | `WSearch` | Otomatik | Arka planda sürekli disk indekslemesi yapar. Dosya aramalarını nadiren yapıyorsanız kapatabilirsiniz. |
-| **İndirilen Haritalar Yöneticisi** | `MapsBroker` | Otomatik (Gecikmeli) | Çevrimdışı harita uygulamasını kullanmıyorsanız gereksizdir. |
-| **Bluetooth Destek Hizmeti** | `bthserv` | Elle | Bilgisayarınızda Bluetooth adaptörü yoksa veya kullanmıyorsanız kapatın. |
-| **Uzak Kayıt Defteri** | `RemoteRegistry` | Devre Dışı / Elle | Güvenlik açığı yaratabilir. Ağ üzerinden kayıt defteri düzenlemesi yapmıyorsanız kapatılmalıdır. |
+### 1. Telemetri ve Veri Toplama Servisleri
+Microsoft'a kullanım verilerini gönderen ve arka planda sürekli I/O (Disk) işlemi yapan servislerdir.
+
+*   **Bağlanmış Kullanıcı Deneyimleri ve Telemetri (Connected User Experiences and Telemetry - DiagTrack):**
+    *   *Açıklama:* Sistem kullanım verilerini toplar.
+    *   *Öneri:* **Devre Dışı**
+*   **dmwappushservice:**
+    *   *Açıklama:* WAP Anında İletme Mesaj Yönlendirme Hizmetidir, telemetri ile ilişkilidir.
+    *   *Öneri:* **Devre Dışı**
+*   **Tanılama İlkesi Hizmeti (Diagnostic Policy Service):**
+    *   *Açıklama:* Windows bileşenlerindeki sorunları tespit eder. Genellikle çözümsüz raporlar oluşturur ve kaynak tüketir.
+    *   *Öneri:* **Devre Dışı**
+
+### 2. Oyun ve Xbox Servisleri (Xbox / Game Pass Kullanmayanlar İçin)
+Bilgisayarınızda Xbox uygulaması veya Xbox Game Pass kullanmıyorsanız bu servislerin tamamını kapatabilirsiniz.
+
+*   **Xbox Accessory Management Service**
+*   **Xbox Live Auth Manager**
+*   **Xbox Live Game Save**
+*   **Xbox Live Networking Service**
+    *   *Öneri:* Xbox platformunu kullanmıyorsanız tümünü **Devre Dışı** yapın. Oyun oynuyorsanız **Elle** modunda bırakın.
+
+### 3. Donanım ve Cihaz Özel Servisleri
+Kullanmadığınız donanımlara ait servislerin çalışması gereksiz kaynak tüketimidir.
+
+*   **Dokunmatik Klavye ve El Yazısı Paneli Hizmeti (Touch Keyboard and Handwriting Panel Service):**
+    *   *Açıklama:* Dokunmatik ekranı olmayan masaüstü ve standart laptoplar için gereksizdir.
+    *   *Öneri:* **Devre Dışı**
+*   **Yazdırma Biriktiricisi (Print Spooler):**
+    *   *Açıklama:* Yazıcı ve tarayıcı işlemlerini yönetir.
+    *   *Öneri:* Fiziksel bir yazıcı kullanmıyorsanız **Devre Dışı**. (PDF yazdırma özelliğini etkileyebilir).
+*   **Bluetooth Destek Hizmeti (Bluetooth Support Service):**
+    *   *Açıklama:* Bluetooth cihazlarını yönetir.
+    *   *Öneri:* Bilgisayarınızda Bluetooth adaptörü yoksa veya kullanmıyorsanız **Devre Dışı**.
+*   **Akıllı Kart (Smart Card) Servisleri:**
+    *   *Açıklama:* Fiziksel akıllı kart okuyucuları için gereklidir.
+    *   *Öneri:* **Devre Dışı**
+
+### 4. Ağ ve Uzaktan Erişim Servisleri
+Güvenlik açıklarını kapatmak ve ağı rahatlatmak için önerilen ayarlar:
+
+*   **Uzak Kayıt Defteri (Remote Registry):**
+    *   *Açıklama:* Uzaktaki kullanıcıların Windows Kayıt Defterini değiştirmesine izin verir.
+    *   *Öneri:* Güvenlik ve performans için **Devre Dışı**.
+*   **Uzak Masaüstü Hizmetleri (Remote Desktop Services):**
+    *   *Açıklama:* RDP bağlantılarını sağlar.
+    *   *Öneri:* AnymDesk/TeamViewer gibi 3. taraf yazılımlar kullanıyorsanız veya uzaktan bağlantı yapmıyorsanız **Devre Dışı**.
+*   **İndirilen Haritalar Yöneticisi (Downloaded Maps Manager):**
+    *   *Açıklama:* Windows Haritalar uygulamasının harita indirmesini sağlar.
+    *   *Öneri:* **Devre Dışı**
+
+### 5. Diğer İkincil Servisler
+
+*   **Faks (Fax):**
+    *   *Öneri:* **Devre Dışı**
+*   **Perakende Gösteri Hizmeti (Retail Demo Service):**
+    *   *Açıklama:* Mağazalarda sergilenen cihazlar içindir.
+    *   *Öneri:* **Devre Dışı**
+*   **Kurumsal Uygulama Yönetimi (Enterprise App Management):**
+    *   *Öneri:* Şirket ağına bağlı olmayan kişisel bilgisayarlarda **Devre Dışı**.
 
 ---
 
-## Adım Adım Windows 11 Gereksiz Servisleri Kapatma
+## Gelişmiş Kullanıcılar İçin PowerShell İle Servis Kapatma
 
-Windows 11'de servisleri optimize etmek için iki ana yöntem mevcuttur: Grafiksel Arayüz (GUI) ve komut satırı (PowerShell).
-
-### 1. Yöntem: Hizmetler (services.msc) Konsolu ile Kapatma
-
-Bu yöntem, servisleri tek tek inceleyerek ve açıklamalarını okuyarak kapatmak isteyen kullanıcılar için en güvenli yoldur.
-
-1.  Klavye üzerinden `Windows Tuşu + R` kombinasyonuna basarak **Çalıştır** penceresini açın.
-2.  Arama kutusuna `services.msc` yazın ve `Enter` tuşuna basın.
-3.  Açılan listeden kapatmak istediğiniz servisi bulun (Örneğin: *Bağlı Kullanıcı Deneyimleri ve Telemetri*).
-4.  Servisin üzerine çift tıklayarak **Özellikler** penceresini açın.
-5.  **Başlangıç türü** açılır menüsünü **Devre Dışı** olarak değiştirin.
-6.  Eğer servis o an çalışıyorsa, **Hizmet durumu** altındaki **Durdur** butonuna tıklayın.
-7.  **Uygula** ve **Tamam** butonlarına basarak değişiklikleri kaydedin.
-
-### 2. Yöntem: PowerShell ile Gelişmiş Servis Yönetimi (Hızlı Yöntem)
-
-Yazılım mimarları ve sistem yöneticileri için en efektif yöntem PowerShell betikleri kullanmaktır. Bu işlem için PowerShell'i yönetici olarak çalıştırmanız gerekir.
-
-Aşağıdaki komut bloğu, yukarıda listelenen en yaygın gereksiz servisleri tek bir hamleyle durdurur ve başlangıç türünü "Devre Dışı" (Disabled) olarak ayarlar:
+Aşağıdaki komutları **Yönetici olarak çalıştırılan PowerShell** üzerinden girerek en çok kaynak tüketen telemetri servislerini tek seferde devre dışı bırakabilirsiniz:
 
 ```powershell
-# Yönetici yetkisiyle çalıştırıldığından emin olun
-$services = @(
-    "DiagTrack",      # Bağlı Kullanıcı Deneyimleri ve Telemetri
-    "MapsBroker",      # İndirilen Haritalar Yöneticisi
-    "RemoteRegistry",  # Uzak Kayıt Defteri
-    "TabletInputService" # Dokunmatik Klavye ve El Yazısı Paneli
-)
+# Telemetri ve Tanılama Servislerini Kapatma
+Stop-Service -Name "DiagTrack" -Force
+Set-Service -Name "DiagTrack" -StartupType Disabled
 
-foreach ($service in $services) {
-    if (Get-Service -Name $service -ErrorAction SilentlyContinue) {
-        Stop-Service -Name $service -Force -ErrorAction SilentlyContinue
-        Set-Service -Name $service -StartupType Disabled
-        Write-Host "$service servisi başarıyla devre dışı bırakıldı." -ForegroundColor Green
-    }
-}
+Stop-Service -Name "dmwappushservice" -Force
+Set-Service -Name "dmwappushservice" -StartupType Disabled
+
+# Akıllı Kart ve Perakende Gösteri Servislerini Kapatma
+Set-Service -Name "SCardSvr" -StartupType Disabled
+Set-Service -Name "RetailDemo" -StartupType Disabled
+
+# Uzak Kayıt Defterini Kapatma
+Set-Service -Name "RemoteRegistry" -StartupType Disabled
 ```
 
 ---
 
-## Koşullu Olarak Kapatılabilecek Servisler (Kullanım Senaryosuna Göre)
+## Kritik Uyarı: Asla Kapatılmaması Gereken Servisler
 
-Bazı servisler, bilgisayarı kullanım amacınıza göre tamamen gereksiz olabilir. Aşağıdaki senaryoları inceleyerek donanımınıza uygun optimizasyonu yapabilirsiniz.
+Sistem kararsızlığına, mavi ekran (BSOD) hatalarına veya internet/ses kesintilerine yol açabileceğinden aşağıdaki servisleri **kesinlikle kapatmayın**:
 
-### Oyuncular İçin Kapatılabilecek Servisler
-Eğer bilgisayarınızda Xbox ekosistemini kullanmıyorsanız ve sadece Steam, Epic Games gibi platformlardan oyun oynuyorsanız, aşağıdaki servisleri kapatabilirsiniz:
-
-*   **Xbox Accessory Management Service** (`XboxGipSvc`)
-*   **Xbox Live Auth Manager** (`XblAuthManager`)
-*   **Xbox Live Game Save** (`XblGameSave`)
-*   **Xbox Live Networking Service** (`XboxNetApiSvc`)
-
-### Sanallaştırma Kullanmayanlar İçin (Hyper-V)
-Eğer bilgisayarınızda sanal makine (Hyper-V, WSL2) çalıştırmıyorsanız, aşağıdaki servisleri devre dışı bırakabilirsiniz:
-
-*   **Hyper-V Sanal Makine Oturumu Hizmeti** (`vmicvmsession`)
-*   **Hyper-V Zaman Sincronizasyonu Hizmeti** (`vmictimesync`)
-*   **Hyper-V Konuk Hizmet Arabirimi** (`vmicguestinterface`)
+*   **DHCP İstemcisi (DHCP Client):** İnternet IP adresinizi alır.
+*   **DNS İstemcisi (DNS Client):** Web sitelerinin IP çözünürlüğünü sağlar.
+*   **Windows Defender Servisleri:** Temel güvenlik korumasıdır.
+*   **Windows Audio / Windows Audio Bitişik Düzeni:** Sistem seslerini yönetir.
+*   **Tak ve Çalıştır (Plug and Play):** Yeni takılan donanımları tanır.
+*   **Kullanıcı Profili Hizmeti (User Profile Service):** Kullanıcı oturumu açmayı sağlar.
 
 ---
 
-## Kesinlikle Dokunulmaması Gereken Kritik Sistem Servisleri
+## Özet ve En İyi Uygulama Stratjeisi
 
-Performans artırma amacıyla yapılan en büyük hata, işletim sisteminin çekirdek (kernel) işlevlerini yerine getiren servisleri kapatmaktır. Aşağıdaki servislere kesinlikle müdahale edilmemelidir:
-
-*   **RPC (Remote Procedure Call - `RpcSs`):** Windows'un neredeyse tüm iç iletişim mimarisi bu servise bağlıdır. Kapatılması durumunda sistem çöker ve mavi ekran (BSOD) alırsınız.
-*   **DCOM Sunucusu İşlem Başlatıcısı (`DcomLaunch`):** Sistem bileşenlerinin başlatılması için kritiktir.
-*   **Windows Defender / Güvenlik Merkezi (`WinDefend`):** Üçüncü taraf bir antivirüs kullanmıyorsanız, sistemi zararlı yazılımlara karşı tamamen savunmasız bırakır.
-*   **Windows Update (`wuauserv`):** Güvenlik yamalarının alınmasını engeller. Geçici olarak durdurulabilse de tamamen devre dışı bırakılması uzun vadede ciddi güvenlik açıklarına yol açar.
-
----
-
-## Servis Optimizasyonunun Donanım Üzerindeki Etkileri (Kanıtlar ve Metrikler)
-
-Doğru yapılandırılmış bir **windows 11 gereksiz servisler kapatma** işlemi sonrasında sisteminizde şu somut değişiklikler gözlemlenir:
-
-1.  **RAM Kullanımında Azalma:** Boştaki RAM kullanımı, sistem donanımına bağlı olarak **300 MB ile 1 GB arasında** azalır. Bu durum, özellikle 8 GB veya daha az RAM'e sahip sistemlerde darboğazı (bottleneck) önler.
-2.  **Daha Düşük İşlemci Sıcaklığı:** Arka plan thread sayısının azalmasıyla birlikte CPU çekirdekleri daha sık "Deep Sleep" (C-States) moduna geçer. Bu, boştaki işlemci sıcaklığını 2-4°C düşürebilir.
-3.  **Düşük Gecikme Süresi (DPC Latency):** Ses üretimi, video kurgu ve rekabetçi oyunlarda kritik önem taşıyan DPC gecikmeleri, gereksiz sürücü ve servis çağrılarının engellenmesiyle minimize edilir.
+Servis optimizasyonu yapmadan önce mutlaka bir **Sistem Geri Yükleme Noktası** oluşturun. Bir servisin işlevinden emin değilseniz, onu direkt "Devre Dışı" bırakmak yerine **"Elle" (Manual)** moduna getirin. "Elle" modundaki servisler sistem tarafından ihtiyaç anında otomatik başlatılır, varsayılan çalışmada ise RAM kapsamaz.

@@ -1,79 +1,133 @@
 ---
-title: gamescope nedir
-description: gamescope nedir hakkında detaylı optimizasyon ve donanım rehberi.
+title: "gamescope nedir"
+description: "gamescope nedir hakkında detaylı teknik rehber, performans analizi ve karşılaştırma."
 ---
 
-# Gamescope Nedir? Linux ve Steam Deck İçin Mikro-Kompozitör Rehberi
+# Gamescope Nedir? Linux Oyun Deneyimini Değiştiren Micro-Compositor Rehberi
 
-**Gamescope**, Valve tarafından özellikle Linux işletim sistemi ve Steam Deck donanımı için geliştirilmiş, açık kaynaklı bir **Wayland mikro-kompozitörüdür (micro-compositor)**. Eski adı `steamcompmgr` olan bu araç, oyunların işletim sisteminin genel masaüstü pencere yöneticisinden (X11 veya standart Wayland) izole edilerek, optimize edilmiş özel bir sanal katmanda çalıştırılmasını sağlar.
+**Gamescope**, Valve tarafından geliştirilen, özellikle Linux işletim sistemlerinde oyun performansını, görüntü kalitesini ve pencere yönetimini optimize etmek için kullanılan **Wayland tabanlı bir micro-compositor (bileşik görüntü yöneticisi)** mimarisidir. 
 
-Temel amacı; oyunların ekran çözünürlüğünü, yenileme hızını (Hz), kare hızını (FPS) ve ölçekleme algoritmalarını doğrudan donanım seviyesinde kontrol ederek girdi gecikmesini (input lag) minimuma indirmek ve performansı maksimuma çıkarmaktır.
-
----
-
-## Gamescope'un Çalışma Prensibi ve Mimarisi
-
-Geleneksel Linux masaüstü ortamlarında (GNOME veya KDE gibi), bir oyun çalıştırıldığında görüntünün ekrana ulaşması için X11/Wayland sunucusu, pencere yöneticisi ve kompozitör (KWin, Mutter vb.) gibi birçok katmandan geçmesi gerekir. Bu durum gecikmeye ve yırtılmalara (tearing) yol açabilir.
-
-Gamescope, oyunu kendi içinde izole bir "kum havuzunda" (sandbox) çalıştırarak bu zinciri kırar.
-
-### Wayland ve XWayland Entegrasyonu
-Gamescope, kendisi bir Wayland kompozitörü olmasına rağmen, X11 protokolünü kullanan eski oyunları desteklemek için arka planda **XWayland** çalıştırır. Oyun, kendisini standart bir X11 ekranında sanır; ancak Gamescope bu görüntüyü yakalar, Vulkan API'sini kullanarak işler ve doğrudan ekrana (Direct Rendering Manager - DRM/KMS aracılığıyla) aktarır.
-
-### Donanım Hızlandırmalı Ölçekleme (Hardware-Accelerated Scaling)
-Gamescope, oyunun render çözünürlüğü (örneğin 720p) ile ekranın fiziksel çözünürlüğü (örneğin 1080p veya 4K) arasındaki köprüyü donanım hızlandırmalı olarak kurar. Görüntüyü ölçeklemek için CPU yerine doğrudan GPU'nun asenkron hesaplama kuyruklarını (async compute queues) kullanır. Bu sayede ana oyun motoruna ek yük bindirilmez.
+İlk olarak Valve'ın Steam Deck cihazında kullandığı ve temelini `steamcompmgr` projesinden alan Gamescope, oyunu çalıştıran sanal bir ekran sunucusu oluşturur. Bu sayede oyun, işletim sisteminin ana masaüstü ortamından (GNOME, KDE vb.) izole edilir ve doğrudan grafik sürücüsüne işlenir.
 
 ---
 
-## Gamescope'un Temel Özellikleri ve Avantajları
+## Gamescope Nasıl Çalışır? (Teknik Mimarisi)
 
-Gamescope, modern bir oyun deneyimi için kritik öneme sahip birçok teknik özelliği bünyesinde barındırır:
+Geleneksel Linux mimarisinde oyunlar, X11 veya Wayland masaüstü yöneticisi üzerinde diğer pencerelerle aynı görüntü işleme hattını (rendering pipeline) paylaşır. Bu durum gecikmeye (input lag), kare yırtılmalarına (screen tearing) ve ölçekleme sorunlarına yol açabilir.
 
-### Düşük Girdi Gecikmesi (Input Lag Reduction)
-Gamescope, masaüstü ortamının getirdiği çift veya üçlü arabelleğe alma (double/triple buffering) zorunluluklarını baypas eder. **KMS (Kernel Mode Setting)** doğrudan entegrasyonu sayesinde, üretilen kareler doğrudan ekran kartının önbelleğinden monitöre gönderilir. Bu, rekabetçi oyunlarda milisaniyeler mertebesinde avantaj sağlar.
+Gamescope bu mimariyi şu şekilde dönüştürür:
 
-### AMD FSR (FidelityFX Super Resolution) ve Tam Ekran Ölçekleme
-Gamescope, sistem genelinde **AMD FSR 1.0** ve **NVIDIA Image Scaling (NIS)** desteği sunar. Oyunun kendisinde FSR desteği olmasa bile, Gamescope aracılığıyla oyun düşük çözünürlükte çalıştırılıp yapay zeka destekli algoritmalarla yüksek çözünürlüğe net bir şekilde ölçeklenebilir. Ayrıca tamsayı ölçekleme (integer scaling) ve piksel sanatı (pixel art) oyunlar için en yakın komşu (nearest-neighbor) filtreleme seçenekleri mevcuttur.
-
-### HDR ve Değişken Yenileme Hızı (VRR) Desteği
-Linux ekosisteminde HDR (High Dynamic Range) desteğinin öncüsü Gamescope'tur. HDR10 meta verilerini doğrudan monitöre iletebilir. Aynı zamanda **G-Sync** ve **FreeSync** gibi Değişken Yenileme Hızı (VRR) teknolojilerini yerel olarak destekleyerek yırtılmasız ve akıcı bir görüntü sunar.
+1. **İzolasyon (Nested Compositing):** Gamescope, oyun için özel bir **Xwayland** veya **Vulkan** sunucusu başlatır. Oyun kendisini tamamen bağımsız bir ekranda çalışıyor zanneder.
+2. **Kare Oluşturma (Rendering):** Oyunun ürettiği kareler doğrudan Gamescope tarafından yakalanır.
+3. **Piksel İşleme ve Ölçekleme:** Gamescope, yakalanan kareleri ekran kartının Donanım Düzlemlerini (Hardware Planes) ve Vulkan katmanlarını kullanarak yeniden ölçeklendirir (Upscale/Downscale), HDR işler veya kare hızını sınırlar.
+4. **Ekrana Sunum (Direct Scanout):** Hazırlanan nihayi görüntü, masaüstü yöneticisi baypas edilerek **DRM/KMS (Direct Rendering Manager / Kernel Mode Setting)** aracılığıyla doğrudan monitöre gönderilir. Bu işlem gecikmeyi minimuma indirir.
 
 ---
 
-## Gamescope Nasıl Kullanılır? (Parametreler ve Komutlar)
+## Gamescope'un Temel Teknik Özellikleri
 
-Gamescope, terminal üzerinden veya Steam başlatma seçenekleri aracılığıyla parametrelerle yönetilir. 
+### 1. Gelişmiş Ölçekleme Teknolojileri (Upscaling)
+Gamescope, donanım düzeyinde veya GPU tabanlı Vulkan shader'ları kullanarak düşük çözünürlükteki oyunları yüksek çözünürlüklü ekranlara kaliteden ödün vermeden taşır. Desteklenen ölçekleme algoritmaları:
+* **AMD FSR (FidelityFX Super Resolution):** Sürücü seviyesinde tüm oyunlara uygulanabilir.
+* **NVIDIA NIS (Nvidia Image Scaling):** NVIDIA kartlar için keskinleştirme ve ölçekleme.
+* **Bilinear & Nearest Neighbor:** Piksel grafikli veya retro oyunlar için performans odaklı ölçekleme.
 
-### Temel Çalıştırma Komutları
-Bir oyunu Gamescope ile başlatmak için terminalde şu sözdizimi kullanılır:
+### 2. Düşük Gecikme ve Kare Zamanlaması (Frame Pacing)
+Gamescope, ekran kartının `Vulkan Present` katmanı üzerinden çalışarak oyun içi kısıtlayıcılardan daha kararlı bir **Frame Limiter (FPS Sınırlayıcı)** sunar. Kare sunum zamanlamasını mükemmelleştirerek "micro-stuttering" (mikro takılma) sorunlarını ortadan kaldırır.
+
+### 3. Esnek Çözünürlük Sanallaştırması
+Pencereli modu desteklemeyen veya eski çözünürlük standartlarına (örneğin 4:3) sahip oyunları, monitörünüzün yerel çözünürlüğüne veya oranına zorlamadan sanal bir pencere içerisinde çalıştırır.
+
+### 4. Gelişmiş Renk Yönetimi ve HDR
+Linux üzerinde native HDR (High Dynamic Range) desteğinin öncüsüdür. Oyunların ürettiği SDR görüntüleri HDR'a dönüştürebilir veya oyunun native HDR sinyallerini doğrudan monitöre iletebilir.
+
+---
+
+## Gamescope Kurulumu
+
+Popüler Linux dağıtımlarında Gamescope paket yöneticileri üzerinden kolayca kurulabilir:
+
+### Arch Linux / Manjaro
+```bash
+sudo pacman -S gamescope
+```
+
+### Fedora
+```bash
+sudo dnf install gamescope
+```
+
+### Ubuntu / Debian (PPA veya Kaynak Koddan)
+Ubuntu 23.10 ve üzeri sürümlerde Universe deposunda yer alır:
+```bash
+sudo apt install gamescope
+```
+
+---
+
+## Gamescope Kullanımı ve Komut Parametreleri
+
+Gamescope, komut satırından veya Steam başlatma seçeneklerinden (Launch Options) çalıştırılır. 
+
+### Temel Sözdizimi
+```bash
+gamescope [GAMESCOPE SEÇENEKLERİ] -- [ÇALIŞTIRILACAK OYUN/UYGULAMA]
+```
+
+### Sık Kullanılan Parametreler
+
+| Parametre | Açıklama |
+| :--- | :--- |
+| `-w [genişlik]` | Oyunun render edileceği çözünürlük genişliği |
+| `-h [yükseklik]` | Oyunun render edileceği çözünürlük yüksekliği |
+| `-W [genişlik]` | Pencerelerin/Pencere Yöneticisinin sunulacağı ekran genişliği |
+| `-H [yükseklik]` | Pencerelerin/Pencere Yöneticisinin sunulacağı ekran yüksekliği |
+| `-r [fps]` | Ekran tazeleme hızını/FPS limitini belirler (Örn: `-r 144`) |
+| `-f` | Tam ekran (Fullscreen) modunda başlatır |
+| `-b` | Sınırlandırılmamış pencereli (Borderless) modda başlatır |
+| `-F [tür]` | Ölçekleme türü (`fsr`, `nis`, `linear`, `nearest`) |
+| `--fsr-sharpness [0-20]`| FSR keskinleştirme seviyesi (0 en keskin) |
+
+---
+
+## Pratik Kullanım Örnekleri
+
+### Örnek 1: Steam Üzerinde FSR ile 1080p Oyunu 4K Ekranına Ölçekleme
+Steam kütüphanenizdeki bir oyuna sağ tıklayıp **Özellikler > Başlatma Seçenekleri** kısmına şu kodu ekleyebilirsiniz:
 
 ```bash
-gamescope [seçenekler] -- [oyun_başlatma_komutu]
+gamescope -w 1920 -h 1080 -W 3840 -H 2160 -f -F fsr -- %command%
+```
+*Bu komut oyunu içerde 1080p çalıştırır, GPU'yu yormaz ancak ekrana FSR ile 4K kalitesinde basar.*
+
+### Örnek 2: Eski Bir Oyunu 60 FPS'e Sabitlenmiş 1440p Tam Ekran Yapma
+```bash
+gamescope -w 2560 -h 1440 -r 60 -f -- ./oyun_dosyasi
 ```
 
-Sık kullanılan teknik parametreler şunlardır:
-
-*   `-w`: Oyunun render edileceği genişlik (çözünürlük).
-*   `-h`: Oyunun render edileceği yükseklik.
-*   `-W`: Ekranın fiziksel genişliği (çıktı çözünürlüğü).
-*   `-H`: Ekranın fiziksel yüksekliği.
-*   `-r`: Hedef yenileme hızı (FPS/Hz sınırı).
-*   `-F`: Ölçekleme yöntemi (örneğin `fsr` veya `nis`).
-*   `-e`: Steam entegrasyonunu etkinleştirir (Steam Overlay desteği).
-
-### Steam Başlatma Seçenekleri (Launch Options) Ayarı
-Steam kütüphanenizdeki bir oyunu Gamescope ile optimize etmek için, oyunun özelliklerine girip **Başlatma Seçenekleri** kısmına aşağıdaki gibi bir komut ekleyebilirsiniz:
-
-```text
-gamescope -w 1280 -h 720 -W 1920 -H 1080 -f -F fsr -- %command%
+### Örnek 3: Lutris veya Heroic Games Launcher Üzerinde Kullanım
+Masaüstü kısayolu veya başlatıcı içine yerel yürütülebilir dosya komutu olarak:
+```bash
+gamescope -w 1280 -h 720 -W 1920 -H 1080 -F fsr -- mangohud %command%
 ```
-
-*Bu komut; oyunu dahili olarak 720p çözünürlükte çalıştırır, AMD FSR kullanarak 1080p çözünürlüğe ölçekler ve tam ekran (`-f`) modunda başlatır.*
+*(Bu örnekte performans göstergesi olan MangoHud da sürece dahil edilmiştir.)*
 
 ---
 
-## Sonuç: Gamescope Neden Oyun Dünyasını Değiştiriyor?
+## Gamescope Kullanmanın Avantajları ve Dezavantajları
 
-Gamescope, Linux tabanlı oyunculuğun Windows karşısındaki en büyük kozlarından biridir. Valve'ın Steam Deck'te yakaladığı konsol benzeri stabilite ve performansın arkasındaki gizli kahraman Gamescope'tur. 
+### Avantajları
+* **Çökme Koruması:** Oyun çöktüğünde masaüstü ortamınız (X11/Wayland) çökmez, sadece Gamescope penceresi kapanır.
+* **Girdi Gecikmesi (Input Lag) Azalması:** Doğrudan donanım katmanına erişim sayesinde minimum gecikme.
+* **Çoklu Monitör Hatalarının Çözümü:** Farenin oyundan dışarı kaçması veya ikinci monitörün çözünürlüğünün bozulması gibi sorunları engeller.
+* **Sürücü Bağımsız FSR:** Oyunda FSR desteği olmasa bile FSR kullanabilme imkanı.
 
-Gelişmiş pencere yönetimi, donanım seviyesinde FSR entegrasyonu, HDR desteği ve ultra düşük gecikme süresi ile Gamescope, yalnızca el konsollarının değil, modern Linux oyuncularının da vazgeçilmez bir optimizasyon aracıdır.
+### Dezavantajları
+* NVIDIA kapalı kaynak kodlu sürücülerinde Wayland/DRM-KMS kısıtlamaları nedeniyle zaman zaman performans kayıpları veya uyumluluk sorunları yaşanabilir (AMD GPU'larda mükemmel çalışır).
+* Anti-Cheat (Hile Karşıtı) yazılımı kullanan bazı online oyunlarda sanallaştırma katmanı olarak algılanma riski çok düşük de olsa teorik olarak mevcuttur.
+
+---
+
+## Özet
+
+Gamescope, Valve'ın Linux oyun ekosistemine sunduğu en kritik teknolojilerden biridir. Oyunları masaüstü ortamının yükünden kurtararak donanım seviyesinde kontrol sağlar. Özellikle düşük konfigürasyonlu sistemlerde FSR desteğiyle performans artışı sağlarken, üst düzey sistemlerde ise daha kararlı kare zamanlaması ve HDR deneyimi sunar.

@@ -1,85 +1,66 @@
 ---
-title: mangohud kurulumu
-description: mangohud kurulumu hakkında detaylı optimizasyon ve donanım rehberi.
+title: "mangohud kurulumu"
+description: "mangohud kurulumu hakkında detaylı teknik rehber, performans analizi ve karşılaştırma."
 ---
 
-# Linux Performans İzleme: Adım Adım MangoHud Kurulumu ve Yapılandırması
+# MangoHud Kurulumu ve Yapılandırma Rehberi: Linux Performans İzleme
 
-Linux işletim sistemlerinde oyun oynarken veya grafik yoğunluklu uygulamaları çalıştırırken donanım kaynaklarının anlık durumunu izlemek, sistem optimizasyonu için kritik öneme sahiptir. **MangoHud**, Vulkan ve OpenGL uygulamaları için geliştirilmiş, özelleştirilebilir ve açık kaynaklı bir donanım izleme (overlay) katmanıdır. CPU/GPU sıcaklığı, yükü, VRAM/RAM kullanımı, FPS ve kare zamanlaması (frame time) gibi verileri gerçek zamanlı olarak ekrana yansıtır.
+MangoHud, Linux işletim sistemlerinde Vulkan ve OpenGL tabanlı uygulamalar ile oyunlar için geliştirilmiş açık kaynaklı bir performans izleme (overlay) katmanıdır. MSI Afterburner / RivaTuner (RTSS) yazılımlarının Linux ekosistemindeki karşılığı olan MangoHud; kare hızını (FPS), kare süresini (frametime), CPU/GPU sıcaklıklarını, RAM/VRAM kullanımını ve sistem kaynaklarını gerçek zamanlı olarak ekranda görüntüler.
 
-Bu rehberde, kıdemli bir sistem mimarı ve donanım uzmanı perspektifiyle, farklı Linux dağıtımlarında **MangoHud kurulumu** adımlarını, yapılandırma detaylarını ve performans optimizasyonlarını inceleyeceğiz.
-
----
-
-## MangoHud Nedir ve Neden Kullanılmalıdır?
-
-MangoHud, MSI Afterburner/RivaTuner Statistics Server (RTSS) yazılımının Linux ekosistemindeki en güçlü ve kararlı alternatifidir. C++ ile geliştirilen bu araç, doğrudan grafik sürücüleri ve Vulkan API katmanı ile entegre çalışarak sistem üzerinde minimum ek yük (overhead) oluşturur.
-
-**Temel Avantajları:**
-*   **Düşük Gecikme:** Doğrudan Vulkan katmanına (layer) entegre olduğu için CPU döngülerini gereksiz yere meşgul etmez.
-*   **Geniş Donanım Desteği:** AMD, NVIDIA ve Intel grafik işlemcileriyle tam uyumludur.
-*   **Kapsamlı Metrikler:** Kare zamanlaması grafiği (frame time graph), minimum/maksimum/ortalama FPS, RAM/VRAM kullanımı ve işlemci çekirdeklerinin tekil sıcaklık takibini yapabilir.
+Bu rehberde, farklı Linux dağıtımlarında MangoHud kurulumu, Steam ve bağımsız oyunlarda kullanımı ve konfigürasyon detayları adım adım ele alınmaktadır.
 
 ---
 
-## Farklı Linux Dağıtımlarında MangoHud Kurulumu
+## Sistem Gereksinimleri ve Ön Koşullar
 
-MangoHud kurulumu, kullandığınız Linux dağıtımının paket yöneticisine ve uygulamanın (örneğin Steam) Flatpak veya yerel (native) olarak kurulup kurulmadığına göre değişiklik gösterir.
+MangoHud'ın sorunsuz çalışabilmesi için sisteminizde aşağıdaki bileşenlerin yüklü olması gerekir:
 
-### Arch Linux ve Tabanlı Dağıtımlar (Manjaro, EndeavourOS)
+*   **Grafik Sürücüleri:** Güncel Nvidia (Proprietary) veya Mesa (AMD/Intel) sürücüleri.
+*   **Vulkan Desteği:** Sistemde Vulkan sürücülerinin ve `vulkan-tools` paketinin aktif olması.
+*   **Grafik Mimarisi:** 64-bit ve (eski oyunlar için) 32-bit kütüphane desteği.
 
-Arch Linux kullanıcıları, MangoHud paketlerine resmi depolardan ve AUR (Arch User Repository) üzerinden erişebilirler. Hem 64-bit hem de 32-bit (eski oyunlar için) kütüphanelerin kurulması zorunludur.
+---
 
-Terminali açın ve aşağıdaki komutu çalıştırın:
+## Linux Dağıtımlarına Göre MangoHud Kurulumu
+
+Dağıtımınıza uygun komut satırı talimatlarını takip ederek kurulumu gerçekleştirin.
+
+### 1. Arch Linux / Manjaro / EndeavourOS
+
+Arch tabanlı sistemlerde MangoHud resmi depolarda (`extra`) mevcuttur. Hem 64-bit hem de 32-bit (multilib) kütüphanelerinin kurulması önerilir.
 
 ```bash
 sudo pacman -S mangohud lib32-mangohud
 ```
 
-Eğer en güncel geliştirme sürümünü (Git) kurmak istiyorsanız, bir AUR yardımcısı (örneğin `yay`) kullanarak şu komutu çalıştırabilirsiniz:
+### 2. Ubuntu / Debian / Linux Mint
 
-```bash
-yay -S mangohud-git lib32-mangohud-git
-```
-
-### Ubuntu, Debian ve Linux Mint
-
-Ubuntu 20.04 LTS ve üzeri sürümlerde MangoHud, resmi depolarda yer almaktadır. Ancak en güncel donanım destekleri için PPA deposunu kullanmak veya doğrudan GitHub üzerinden derlemek önerilir.
-
-**Resmi Depodan Kurulum:**
+Ubuntu 22.04 LTS ve daha yeni sürümlerde MangoHud ana depolarda yer alır:
 
 ```bash
 sudo apt update
 sudo apt install mangohud
 ```
 
-**En Güncel Sürüm İçin (GitHub Üzerinden Manuel Derleme):**
+*Not: 32-bit oyunlarda destek sağlamak için multiarch yapısı aktifse `mangohud:i386` paketini de yükleyebilirsiniz.*
 
-Eğer dağıtımınızdaki paket eskiyse, aşağıdaki bağımlılıkları yükleyip kaynak koddan derleme yapabilirsiniz:
+### 3. Fedora
 
-```bash
-# Bağımlılıkların yüklenmesi
-sudo apt install dbus-user-session git python3-pip python3-setuptools python3-wheel ninja-build meson libx11-dev libxnvctrl-dev
-
-# Kaynak kodun çekilmesi ve derlenmesi
-git clone --recurse-submodules https://github.com/flightlessmango/MangoHud.git
-cd MangoHud
-./build.sh install
-```
-
-### Fedora ve RHEL Tabanlı Dağıtımlar
-
-Fedora depolarında MangoHud paketlenmiş olarak sunulmaktadır. Kurulum için `dnf` paket yöneticisi kullanılır:
+Fedora 33 ve üzeri sürümlerde resmi depolar üzerinden tek komutla yüklenebilir:
 
 ```bash
 sudo dnf install mangohud
 ```
 
-### Evrensel Kurulum: Flatpak (Steam ve Heroic Launcher İçin)
+32-bit Steam oyunları için ek kütüphane:
 
-Eğer Steam veya Heroic Games Launcher gibi oyun istemcilerini **Flatpak** olarak kullanıyorsanız, sistem genelinde kurulu olan MangoHud bu uygulamalar tarafından algılanmayacaktır. Flatpak sandbox (yalıtılmış alan) mimarisi nedeniyle MangoHud'ı Flatpak çalışma zamanı (runtime) olarak kurmanız gerekir.
+```bash
+sudo dnf install mangohud.i686
+```
 
-Aşağıdaki komutla Flatpak için MangoHud kurulumunu gerçekleştirebilirsiniz:
+### 4. Flatpak (Evrensel Kurulum)
+
+Eğer Steam veya oyunlarınızı Flatpak formatında kullanıyorsanız, MangoHud'ı Flatpak bağımlılığı olarak kurmanız gerekir:
 
 ```bash
 flatpak install flathub org.freedesktop.Platform.VulkanLayer.MangoHud
@@ -87,119 +68,115 @@ flatpak install flathub org.freedesktop.Platform.VulkanLayer.MangoHud
 
 ---
 
-## MangoHud Yapılandırması (Configuration) Nasıl Yapılır?
+## MangoHud Kullanımı ve Çalıştırma Yöntemleri
 
-MangoHud, varsayılan olarak temel metrikleri gösterir. Ancak arayüzü özelleştirmek, renkleri değiştirmek veya gösterilecek donanım parametrelerini seçmek için bir yapılandırma dosyası oluşturmanız gerekir.
+MangoHud kurulum tamamlandıktan sonra arka planda bir servis olarak çalışmaz; istenen uygulama başlatılırken çağrılır.
 
-### Manuel Yapılandırma Dosyası Oluşturma
-
-MangoHud, yapılandırma dosyasını kullanıcı dizini altındaki belirli bir yolda arar. İlk olarak bu dizini ve dosyayı oluşturalım:
-
-```bash
-mkdir -p ~/.config/MangoHud
-nano ~/.config/MangoHud/MangoHud.conf
-```
-
-Aşağıda, donanım uzmanları tarafından optimize edilmiş, hem GPU hem de CPU limitlerini analiz etmenize olanak tanıyan **örnek bir `MangoHud.conf` şablonu** yer almaktadır. Bu içeriği oluşturduğunuz dosyaya yapıştırın:
-
-```text
-# MangoHud Optimize Edilmiş Yapılandırma Dosyası
-
-# Performans Metrikleri
-fps
-frame_timing=1
-frametime_color=00FF00
-
-# CPU İzleme
-cpu_temp
-cpu_mhz
-cpu_power
-cpu_stats
-
-# GPU İzleme
-gpu_temp
-gpu_core_clock
-gpu_mem_clock
-gpu_power
-gpu_stats
-
-# Bellek İzleme
-ram
-vram
-
-# Görsel Özelleştirmeler
-legacy_layout=0
-horizontal=0
-round_corners=10
-background_alpha=0.5
-background_color=020202
-font_size=24
-
-# Kısayollar
-toggle_hud=Shift_R+F12
-```
-
-Dosyayı kaydedip çıkın (Nano için `CTRL+O`, `Enter`, `CTRL+X`).
-
-### GOverlay ile Grafiksel Arayüz (GUI) Kullanımı
-
-Kodlarla uğraşmak istemiyorsanız, MangoHud yapılandırmasını görsel olarak yapmanızı sağlayan **GOverlay** aracını kurabilirsiniz.
-
-*   **Arch Linux:** `sudo pacman -S goverlay`
-*   **Debian/Ubuntu:** `sudo apt install goverlay`
-*   **Fedora:** `sudo dnf install goverlay`
-
-GOverlay arayüzü üzerinden yaptığınız tüm değişiklikler otomatik olarak `~/.config/MangoHud/MangoHud.conf` dosyasına yazılır.
-
----
-
-## MangoHud Nasıl Çalıştırılır?
-
-Kurulum ve yapılandırma tamamlandıktan sonra, MangoHud'ı oyunlarda aktif etmenin farklı yolları vardır.
-
-### 1. Steam Başlatma Seçenekleri Entegrasyonu
+### Steam Üzerinde Kullanım
 
 Steam kütüphanenizdeki bir oyunda MangoHud'ı aktif etmek için:
 
-1.  Steam'i açın ve kütüphanenizden bir oyuna sağ tıklayıp **Özellikler (Properties)** seçeneğine tıklayın.
-2.  **Genel (General)** sekmesinde bulunan **Başlatma Seçenekleri (Launch Options)** alanına şu komutu ekleyin:
+1.  Steam'i açın ve oyuna sağ tıklayıp **Özellikler (Properties)** seçeneğine girin.
+2.  **Genel (General)** sekmesindeki **Başlatma Seçenekleri (Launch Options)** kutusuna şu kodu ekleyin:
 
 ```bash
 mangohud %command%
 ```
 
-Eğer oyun Proton (Windows uyumluluk katmanı) kullanıyorsa komut yine aynı kalacaktır.
+*Proton (DXVK/VKD3D) kullanan tüm Windows oyunlarında otomatik olarak Vulkan katmanı tetiklenecektir.*
 
-### 2. Lutris ve Heroic Games Launcher Entegrasyonu
+### Terminal Üzerinden Kullanım (OpenGL ve Vulkan)
 
-*   **Lutris:** Oyunun üzerine sağ tıklayın -> *Configure* -> *System options* sekmesine gelin. Aşağı kaydırarak **MangoHud** seçeneğini aktif (Enable) hale getirin.
-*   **Heroic Games Launcher:** Oyun ayarlarına girin ve *Alternative Launchers* veya *Sistem* sekmesinden **Enable MangoHud** seçeneğini işaretleyin.
-
-### 3. Terminal Üzerinden Doğrudan Çalıştırma
-
-Yerel bir OpenGL veya Vulkan uygulamasını terminalden MangoHud ile başlatmak için uygulamanın önüne `mangohud` parametresini eklemeniz yeterlidir:
+Herhangi bir Linux uygulamasını veya oyununu terminalden MangoHud ile başlatmak için komutun önüne `mangohud` ekleyin:
 
 ```bash
-mangohud ./oyun_dosyasi
+# Vulkan Örneği (vkcube)
+mangohud vkcube
+
+# OpenGL Örneği (glxgears)
+mangohud --dlsym glxgears
+```
+
+### Lutris ve Heroic Games Launcher
+
+*   **Lutris:** System Options > Command prefix alanına `mangohud` yazın veya "Enable MangoHud" anahtarını aktif edin.
+*   **Heroic Games Launcher:** Game Settings > Other > Enable MangoHud seçeneğini işaretleyin.
+
+---
+
+## MangoHud Yapılandırması (Configuration)
+
+MangoHud varsayılan ayarlarıyla gelir ancak tamamen özelleştirilebilir. Yapılandırma dosyası kullanıcı dizininde saklanır.
+
+### Konfigürasyon Dosyası Oluşturma
+
+Varsayılan konfigürasyon şablonunu kullanıcı dizininize kopyalayın:
+
+```bash
+mkdir -p ~/.config/MangoHud
+cp /usr/share/doc/mangohud/MangoHud.conf.example ~/.config/MangoHud/MangoHud.conf
+```
+
+`~/.config/MangoHud/MangoHud.conf` dosyasını herhangi bir metin düzenleyici (`nano`, `gedit`) ile açarak düzenleyebilirsiniz.
+
+### Örnek Konfigürasyon Parametreleri
+
+Aşağıda optimize edilmiş bir `MangoHud.conf` içeriği bulunmaktadır:
+
+```ini
+### Görünüm Ayarları
+legacy_layout=false
+position=top-left
+round_corners=10
+background_alpha=0.5
+font_size=24
+
+### Donanım İzleme
+cpu_stats
+cpu_temp
+gpu_stats
+gpu_temp
+ram
+vram
+
+### Performans ve Metrikler
+fps
+frametime=1
+frame_timing=1
+
+### Kısayol Tuşları
+toggle_hud=Shift_R+F12
+toggle_logging=Shift_L+F11
 ```
 
 ---
 
-## Sık Karşılaşılan Sorunlar ve Çözümleri
+## Görsel Arayüz ile Yapılandırma: GGOverlay
 
-### Sorun 1: MangoHud Ekranı Görünmüyor (Özellikle 32-bit Oyunlarda)
-**Çözüm:** Genellikle 32-bit kütüphanelerin eksikliğinden kaynaklanır. Arch Linux kullanıyorsanız `lib32-mangohud` paketinin, Ubuntu kullanıyorsanız ilgili 32-bit sürücülerin kurulu olduğundan emin olun.
+Kod yazmadan metrikleri, renkleri ve konumlandırmayı düzenlemek istiyorsanız **GGOverlay** adlı GUI aracını kullanabilirsiniz.
 
-### Sorun 2: Flatpak Steam'de MangoHud Çalışmıyor
-**Çözüm:** Flatpak izinlerinin MangoHud'ın donanım bilgilerine erişmesini engellemediğinden emin olun. Terminalde şu komutu çalıştırarak gerekli izinleri tanımlayabilirsiniz:
+*   **Arch Linux:** `sudo pacman -S ggoverlay`
+*   **Flatpak:** `flatpak install flathub io.github.benjamimgois.goverlay`
 
+GGOverlay, oluşturduğunuz değişiklikleri anlık olarak önizlemenizi sağlar ve doğrudan `MangoHud.conf` dosyasına işler.
+
+---
+
+## Sorun Giderme (Troubleshooting)
+
+### 1. Overlay Oyunda Görünmüyor
+*   Oyunun Vulkan veya OpenGL kullandığından emin olun.
+*   Nvidia kullanıcısıysanız `nvidia-drm.modeset=1` parametresinin GRUB üzerinde aktif olduğunu doğrulayın.
+*   OpenGL oyunlarında `mangohud --dlsym %command%` komutunu deneyin.
+
+### 2. Flatpak Steam İçinde Çalışmıyor
+Flatpak Steam kullanıyorsanız MangoHud Flatpak katmanının Steam ile aynı mimaride (Flatpak) kurulu olduğundan emin olun:
 ```bash
-flatpak override --user --filesystem=xdg-config/MangoHud:ro org.valvesoftware.Steam
+flatpak list | grep MangoHud
 ```
 
-### Sorun 3: OpenGL Oyunlarında FPS Sayacı Kilitleniyor veya Çöküyor
-**Çözüm:** OpenGL oyunlarında MangoHud bazen `ld_preload` mekanizmasına ihtiyaç duyar. Bu durumda başlatma seçeneğini şu şekilde değiştirin:
-
+### 3. Sıcaklık Değerleri Yanlış veya Görünmüyor
+AMD işlemcilerde `k10temp`, Intel işlemcilerde `coretemp` çekirdek modüllerinin yüklü olduğunu kontrol edin:
 ```bash
-mangohud --dlsym %command%
+sensors
 ```

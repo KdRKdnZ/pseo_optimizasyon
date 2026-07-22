@@ -1,83 +1,135 @@
 ---
-title: gamemode kurulumu
-description: gamemode kurulumu hakkında detaylı optimizasyon ve donanım rehberi.
+title: "gamemode kurulumu"
+description: "gamemode kurulumu hakkında detaylı teknik rehber, performans analizi ve karşılaştırma."
 ---
 
-# Gamemode Kurulumu: Linux Oyun Performansını En Üst Düzeye Çıkarma Rehberi
+# Linux GameMode Kurulumu ve Yapılandırma Rehberi
 
-Linux işletim sistemlerinde oyun performansı, arka plan servislerinin ve CPU/GPU güç yönetim politikalarının doğru yapılandırılmasına doğrudan bağlıdır. Feral Interactive tarafından geliştirilen **GameMode**, Linux çekirdeğinin (kernel) ve donanım bileşenlerinin oyunlar sırasında dinamik olarak optimize edilmesini sağlayan açık kaynaklı bir arka plan programıdır (daemon). 
+GameMode, Feral Interactive tarafından açık kaynak olarak geliştirilen, Linux işletim sistemlerinde oyun performansını artırmak amacıyla sistem kaynaklarını dinamik olarak optimize eden bir daemon (arka plan hizmeti) ve kitaplık birleşimidir. Oyun başladığında varsayılan sistem ayarlarını geçici olarak değiştirir ve oyun kapatıldığında sistemi eski durumuna döndürür.
 
-Bu rehberde, Linux sisteminizde oyun performansını optimize etmek için **gamemode kurulumu**, yapılandırılması ve entegrasyon süreçlerini teknik detaylarıyla ele alacağız.
+Bu rehberde, GameMode'un teknik çalışma prensipleri, popüler Linux dağıtımları üzerindeki kurulum adımları, konfigürasyonu ve oyun istemcileriyle entegrasyonu detaylandırılmaktadır.
 
 ---
 
-## GameMode Nedir ve Nasıl Çalışır?
+## GameMode Nasıl Çalışır? (Teknik Altyapı)
 
-GameMode, oyun başladığında tetiklenen ve oyun kapandığında sistemi eski haline getiren geçici optimizasyonlar bütünüdür. Sistem kaynaklarını statik olarak yüksek performansa ayarlamak yerine, yalnızca ihtiyaç anında (on-demand) müdahale ederek donanım ömrünü ve enerji tasarrufunu korur.
+GameMode, bir oyun çalıştığında D-Bus protokolü üzerinden sinyal alır ve aşağıdaki sistem parametrelerini "Performans" moduna alır:
 
-### CPU Governor ve Zamanlama (Scheduling) Optimizasyonu
-GameMode aktif olduğunda, CPU governor modunu otomatik olarak `powersave` veya `schedutil` konumundan `performance` konumuna getirir. Bu işlem, işlemci çekirdeklerinin maksimum frekansta kalmasını sağlayarak oyun içi anlık FPS düşüşlerini (stuttering) engeller. Ayrıca, oyun sürecinin (process) CPU önceliğini (`renice` ve `SCHED_ISO` kullanarak) artırır.
-
-### GPU Güç Yönetimi ve I/O Önceliği
-*   **NVIDIA:** GPU saat hızlarını ve fan profillerini en yüksek performans seviyesine (PowerMizer Performance Mode) çeker.
-*   **AMD:** `power_dpm_force_performance_level` değerini `high` olarak ayarlayarak GPU'nun agresif bir şekilde frekans yükseltmesini sağlar.
-*   **I/O Önceliği:** Disk okuma/yazma önceliğini (`ionice`) optimize ederek harita yükleme sürelerini kısaltır.
+1. **CPU Governor:** İşlemci çekirdeklerini en yüksek frekansta çalışacak şekilde `performance` moduna zorlar (ondemand veya powersave modundan çıkarır).
+2. **GPU Saat Hızları:** AMD ve NVIDIA ekran kartlarında güç tasarruf modlarını devre dışı bırakır, VRAM ve çekirdek hızlarını maksimuma kilitler.
+3. **I/O ve Süreç Önceliği (Renice):** Oyun sürecine (process) yüksek CPU ve disk okuma/yazma önceliği atar.
+4. **Kernel Scheduler:** `SCHED_ISO` (izokron zamanlama) veya gerçek zamanlı öncelik ayarlarını devreye sokar.
+5. **Ekran Koruyucu İnhibisyonu:** Oyun esnasında ekran koruyucu ve güç yönetiminin devreye girmesini engeller.
 
 ---
 
 ## Dağıtımlara Göre GameMode Kurulumu
 
-GameMode, modern Linux dağıtımlarının resmi depolarında yer almaktadır. Kurulum sırasında hem 64-bit hem de 32-bit kütüphanelerinin kurulması, özellikle Steam ve Wine/Proton tabanlı oyunların uyumluluğu için kritiktir.
+GameMode paketleri modern Linux dağıtımlarının resmi depolarında yer almaktadır. 64-bit sistemlerde hem 64-bit hem de 32-bit (multilib/multiarch) kütüphanelerinin kurulması, eski ve Proton/Wine tabanlı oyunlarda uyumluluk için şarttır.
 
-### Ubuntu, Debian ve Linux Mint Üzerinde Kurulum
-Debian tabanlı sistemlerde kurulum için aşağıdaki komutu terminalde çalıştırın:
-
+### 1. Ubuntu / Debian / Pop!_OS Kurulumu
 ```bash
 sudo apt update
-sudo apt install gamemode libgamemodeauto0-dev libgamemode-dev
+sudo apt install gamemode libgamemode1 libgamemodeauto1
+```
+*32-bit oyun desteği için (Multiarch etkinse):*
+```bash
+sudo apt install libgamemode1:i386 libgamemodeauto1:i386
 ```
 
-*Not: 32-bit oyun desteği için çoklu mimari (multi-arch) etkinleştirilmişse, `libgamemodeauto0:i386` paketinin de kurulması önerilir.*
-
-### Arch Linux ve Manjaro Üzerinde Kurulum
-Arch Linux depolarında GameMode ana paket ve 32-bit kütüphanesi olarak ikiye ayrılmıştır:
-
+### 2. Arch Linux / Manjaro / EndeavourOS Kurulumu
 ```bash
 sudo pacman -S gamemode lib32-gamemode
 ```
 
-### Fedora ve RHEL Tabanlı Dağıtımlarda Kurulum
-Fedora kullanıcıları aşağıdaki `dnf` komutu ile kurulumu tamamlayabilir:
-
+### 3. Fedora Kurulumu
 ```bash
-sudo dnf install gamemode gamemode-devel
+sudo dnf install gamemode gamemode-32bit
+```
+
+### 4. openSUSE Kurulumu
+```bash
+sudo zypper install gamemode gamemode-32bit
 ```
 
 ---
 
-## GameMode Nasıl Kullanılır ve Yapılandırılır?
+## GameMode Hizmetinin Doğrulanması
 
-Kurulum tamamlandıktan sonra GameMode arka planda bir `systemd` kullanıcı servisi olarak çalışmaya hazır hale gelir. Ancak oyunların bu servisi tetiklemesi için başlatma parametrelerinin ayarlanması gerekir.
+Kurulum tamamlandıktan sonra arka plan hizmetinin doğru çalışıp çalışmadığı ve sistem uyumluluğu kontrol edilmelidir.
 
-### Steam Üzerinde GameMode Aktifleştirme
-Steam kütüphanenizdeki bir oyunda GameMode'u etkinleştirmek için:
+Aşağıdaki komut ile GameMode'un sisteminizdeki tüm bileşenleri (D-Bus, CPU Governor, GPU denetleyicileri) destekleyip desteklemediğini test edin:
 
-1.  Steam'i açın ve oyununuza sağ tıklayıp **Özellikler (Properties)** seçeneğine gidin.
-2.  **Genel (General)** sekmesindeki **Başlatma Seçenekleri (Launch Options)** alanına gelin.
-3.  Aşağıdaki komutu ekleyin:
+```bash
+gamemoded -t
+```
+
+Tüm test çıktılarının **PASSED** veya **SUCCESS** vermesi gerekir. Arka plan hizmetinin durumunu görmek için:
+
+```bash
+systemctl --user status gamemoded
+```
+
+---
+
+## GameMode Yapılandırma Dosyası (`gamemode.ini`)
+
+GameMode varsayılan ayarlarla sorunsuz çalışır; ancak özel GPU hız aşırtma (overclocking) veya özel betik tetiklemeleri için konfigüre edilebilir.
+
+Örnek şablon dosyasını kullanıcı dizinine kopyalayın:
+
+```bash
+mkdir -p ~/.config/
+cp /usr/share/doc/gamemode/gamemode.ini.template ~/.config/gamemode.ini
+```
+
+`~/.config/gamemode.ini` dosyasını bir metin düzenleyici ile açarak aşağıdaki teknik ayarları uygulayabilirsiniz:
+
+```ini
+[general]
+# Oyun başladığında ve bittiğinde çalışacak özel shell komutları
+desiredgov=performance
+igpu_desiredgov=powersave
+renice=10
+
+[gpu]
+# AMD GPU optimizasyonu (0: varsayılan, 1: performans)
+apply_gpu_optimisations=accept-responsibility
+gpu_device=0
+amd_performance_level=high
+
+# NVIDIA GPU güç sınırı ve overclock (NVreg_EnableGpuFirmware=0 gerekebilir)
+nv_powermizer_mode=1
+
+[cpu]
+# Belirli CPU çekirdeklerini park etmek/kapatmak için (örnek: 0-3 arası)
+# park_cores=no
+```
+
+---
+
+## Oyunlarda GameMode Kullanımı ve Entegrasyonu
+
+GameMode, LD_PRELOAD mekanizması veya D-Bus tetiklemeleri ile çalışır.
+
+### Steam Entegrasyonu
+Steam kütüphanenizdeki herhangi bir oyuna sağ tıklayın -> **Özellikler** -> **Genel** sekmesindeki **Başlatma Seçenekleri** (Launch Options) kısmına şu komutu ekleyin:
 
 ```bash
 gamemoderun %command%
 ```
 
-Bu komut, Steam'in oyunu başlatmadan önce GameMode daemon'ını tetiklemesini sağlar.
+### Lutris Entegrasyonu
+1. Lutris'i açın.
+2. **Preferences** (Tercihler) > **System Options** (Sistem Seçenekleri) sekmesine gidin.
+3. **Enable GameMode** seçeneğini aktif hale getirin.
 
-### Lutris ve Heroic Games Launcher Entegrasyonu
-*   **Lutris:** Sağ üstteki menüden *Preferences > System options* yolunu izleyin. **Enable GameMode** seçeneğini aktif hale getirin.
-*   **Heroic Games Launcher:** Oyun ayarlarına girin, *Alternative Launchers* veya *System* sekmesinden **Use GameMode** seçeneğini işaretleyin.
+### Heroic Games Launcher (Epic Games / GOG)
+1. Heroic ayarlarından **Game Settings** bölümüne girin.
+2. **Other** sekmesinde **Use GameMode** seçeneğini işaretleyin.
 
-### Terminal ve Manuel Çalıştırma
-Bağımsız bir oyunu veya emülatörü terminal üzerinden GameMode ile çalıştırmak için komutun başına `gamemoderun` eklemeniz yeterlidir:
+### Komut Satırından Çalıştırma (CLI / Bağımsız Oyunlar)
+Yerel bir binary dosyasını veya betiği GameMode ile çalıştırmak için:
 
 ```bash
 gamemoderun ./oyun_dosyasi
@@ -85,60 +137,22 @@ gamemoderun ./oyun_dosyasi
 
 ---
 
-## Gelişmiş Yapılandırma (`gamemode.ini`)
+## GameMode Etkinlik Testi
 
-GameMode'un varsayılan davranışlarını özelleştirmek için bir yapılandırma dosyası oluşturabilirsiniz. Sistem genelindeki varsayılan şablon `/usr/share/gamemode/gamemode.ini` konumundadır. Kullanıcıya özel özelleştirme yapmak için bu dosyayı kendi ev dizininize kopyalayın:
-
-```bash
-mkdir -p ~/.config/
-cp /usr/share/gamemode/gamemode.ini ~/.config/gamemode.ini
-```
-
-`~/.config/gamemode.ini` dosyasını favori metin editörünüzle açarak aşağıdaki gelişmiş ayarları uygulayabilirsiniz:
-
-```ini
-[general]
-# GameMode aktif olduğunda çalışacak özel scriptler
-start=notify-send "GameMode Aktif" "Performans modu başlatıldı."
-end=notify-send "GameMode Pasif" "Normal moda dönüldü."
-
-[gpu]
-# GPU optimizasyonunu etkinleştirme (0: Kapalı, 1: Açık)
-apply_gpu_optimisations=1
-gpu_device=0
-
-# NVIDIA için overclock ve güç limitleri (CoolBits gerektirir)
-nv_core_clock_mhz_offset=100
-nv_mem_clock_mhz_offset=250
-
-# AMD için güç profili
-amd_performance_level=high
-
-[custom]
-# Ekran koruyucuyu ve güç tasarrufu modunu engelle
-inhibit_screensaver=1
-```
-
----
-
-## Kurulum Doğrulama ve Sorun Giderme
-
-GameMode'un sisteminizde sorunsuz çalıştığını ve oyun sırasında aktif olduğunu doğrulamak için aşağıdaki yöntemleri kullanabilirsiniz.
-
-### Servis Durumunu Kontrol Etme
-GameMode'un aktif olup olmadığını sorgulamak için terminale şu komutu yazın:
+Bir oyun çalışırken GameMode'un aktif olup olmadığını doğrulamak için uçbirimde şu komutu çalıştırın:
 
 ```bash
 gamemoded -s
 ```
 
-Eğer çıktı **"gamemode is active"** ise servis başarıyla çalışıyor demektir. **"gamemode is inactive"** çıktısı, servisin kurulu olduğunu ancak şu anda herhangi bir oyun tarafından tetiklenmediğini gösterir.
+Çıktı aşağıdaki gibi olmalıdır:
+* **GameMode is active** (GameMode aktif)
+* **GameMode is inactive** (GameMode pasif)
 
-### Log Analizi ve Hata Ayıklama
-Eğer performans artışı hissetmiyorsanız veya servis tetiklenmiyorsa, `systemd` günlüklerini inceleyebilirsiniz:
+GameMode aktifleştiğinde CPU frekanslarını anlık izlemek için:
 
 ```bash
-journalctl --user -u gamemoded.service
+watch -n 1 "cat /proc/cpuinfo | grep 'cpu MHz'"
 ```
 
-Bu komut, GPU sürücüsü uyumsuzlukları veya yetki hataları (örneğin, NVIDIA CoolBits eksikliği) gibi sorunları tespit etmenizi sağlar.
+Bu adımlar tamamlandığında Linux sisteminiz oyun esnasında minimum gecikme (latency), kararlı kare hızları (FPS) ve maksimum donanım performansı sunacak şekilde optimize edilmiş olur.
