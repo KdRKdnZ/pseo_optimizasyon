@@ -1,4 +1,5 @@
 import os
+import re
 import socket
 import asyncio
 import logging
@@ -11,9 +12,13 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 log = logging.getLogger("pseo")
 
 client = genai.Client()
-
 limiter = AsyncLimiter(10, 60)
 RETRYABLE_HTTP_CODES = {429, 500, 503, 504}
+
+def slugify(text: str) -> str:
+    text = text.lower().strip()
+    text = re.sub(r'[^a-z0-9]+', '-', text)
+    return text.strip('-')
 
 def dosya_oku(dosya_adi):
     if not os.path.exists(dosya_adi):
@@ -35,28 +40,32 @@ async def internet_gelene_kadar_bekle():
         log.warning("Ağ bağlantısı yok, 15sn sonra tekrar kontrol edilecek.")
         await asyncio.sleep(15)
 
-async def makale_uret(kelime, semaphore):
+async def makale_uret(kelime, slug, semaphore):
     async with semaphore:
         async with limiter:
             backoff = 5
             while True:
                 try:
-                    log.info(f"Üretiliyor: {kelime}")
+                    log.info(f"Üretiliyor: {kelime} (Slug: {slug})")
                     response = await client.aio.models.generate_content(
                         model='gemini-3.6-flash',
                         contents=f"'{kelime}' hakkında teknik, SEO uyumlu ve doğrudan bilgi veren detaylı bir makale yaz. Markdown formatında olsun, içerik direkt h1 başlığı ile başlasın. Gereksiz giriş cümleleri kullanma."
                     )
 
-                    dosya_adi = kelime.replace(" ", "_").lower() + ".md"
+                    dosya_adi = f"{slug}.md"
                     dosya_yolu = os.path.join("docs", dosya_adi)
                     gecici_yol = dosya_yolu + ".tmp"
 
+                    # Front matter ve içerik birleştirme
+                    front_matter = f"---\ntitle: \"{kelime}\"\ndescription: \"{kelime} hakkında detaylı teknik rehber, performans analizi ve karşılaştırma.\"\n---\n\n"
+                    tam_icerik = front_matter + response.text
+
                     with open(gecici_yol, "w", encoding="utf-8") as f:
-                        f.write(response.text)
+                        f.write(tam_icerik)
                     os.replace(gecici_yol, dosya_yolu)
 
                     with open('uretilenler.txt', 'a', encoding='utf-8') as f:
-                        f.write(kelime + '\n')
+                        f.write(f"{slug}:{kelime}\n")
 
                     log.info(f"Başarılı: {kelime}")
                     return
@@ -86,7 +95,22 @@ async def main():
     sablonlar = dosya_oku("sablonlar.txt")
     ekran_kartlari = dosya_oku("ekran_kartlari.txt")
     manuel_kelimeler = dosya_oku("kelimeler.txt")
-    uretilenler = set(dosya_oku("uretilenler.txt"))
+    
+    # Mevcut slug hafızasını oku
+    uretilen_sluglar = set()
+    if os.path.exists("uretilenler.txt"):
+        with open("uretilenler.txt", "r", encoding="utf-8") as f:
+            for satir in f:
+                satir = satir.strip()
+                if ":" in satir:
+                    uretilen_sluglar.add(satir.split(":")[0])
+                elif satir:
+                    uretilen_sluglar.add(slugify(satir))
+
+    # Docs klasöründeki mevcut .md dosyalarını da kontrol et
+    for dosya in os.listdir("docs"):
+        if dosya.endswith(".md"):
+            uretilen_sluglar.add(dosya[:-3])
     
     tum_kelimeler = []
     for gpu in ekran_kartlari:
@@ -95,16 +119,24 @@ async def main():
             
     tum_kelimeler.extend(manuel_kelimeler)
     
-    islem_yapilacaklar = [k for k in tum_kelimeler if k not in uretilenler]
+    # Semantik Deduplication Kontrolü
+    islem_yapilacaklar = []
+    eklenen_sluglar = set()
+    
+    for k in tum_kelimeler:
+        slug = slugify(k)
+        if slug not in uretilen_sluglar and slug not in eklenen_sluglar:
+            islem_yapilacaklar.append((k, slug))
+            eklenen_sluglar.add(slug)
     
     if not islem_yapilacaklar:
         log.info("Sistem kontrol edildi: Üretilecek yeni anahtar kelime bulunamadı.")
         return
 
-    log.info(f"Toplam {len(islem_yapilacaklar)} YENİ makale üretilecek.")
+    log.info(f"Toplam {len(islem_yapilacaklar)} YENİ benzersiz makale üretilecek.")
     
     semaphore = asyncio.Semaphore(1)
-    gorevler = [makale_uret(k, semaphore) for k in islem_yapilacaklar]
+    gorevler = [makale_uret(k, slug, semaphore) for k, slug in islem_yapilacaklar]
     await asyncio.gather(*gorevler)
 
 if __name__ == "__main__":

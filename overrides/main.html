@@ -1,6 +1,17 @@
 {% extends "base.html" %}
 
 {% block extrahead %}
+  <meta name="description" content="{{ page.meta.description or config.site_description }}">
+  <link rel="canonical" href="{{ page.canonical_url }}">
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4695415597641705" crossorigin="anonymous"></script>
   {{ super() }}
+{% endblock %}
+
+{% block footer %}
+  {{ super() }}
+  <div class="pseo-footer-links">
+    <a href="{{ 'gizlilik-politikasi/' | url }}">Gizlilik Politikası</a> ·
+    <a href="{{ 'iletisim/' | url }}">İletişim</a> ·
+    <a href="{{ 'hakkimizda/' | url }}">Hakkımızda</a>
+  </div>
 {% endblock %}
